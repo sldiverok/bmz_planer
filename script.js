@@ -1,4 +1,4 @@
-// === ДОВІДНИК БМЗ v2 ===
+// === ДОВІДНИК БМЗ v2 === 
 console.log("[build] script.js reloaded ✅");
 
 async function loadCSV(departmentCode = null, admin = false) {
