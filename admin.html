@@ -81,9 +81,22 @@
         const hash = md5(input || "");
 
         // === Підрозділи ===
-        const access = {
-          "71bc76c44acc7d6b977f60090dc866f7": "RZB", // md5('rzb')
-          "21232f297a57a5a743894a0e4a801fc3": "ADMIN" // md5('admin')
+// === Підрозділи з паролями ===
+const access = {
+  "969e0c7e6c32b8b730bfb79dcbf78b46": "UPR",    // upr
+  "71bc76c44acc7d6b977f60090dc866f7": "RZB",    // rzb
+  "6480b34c4e6fc07b4a8686e7ef66c4ed": "RZPR",   // rzpr
+  "1a71921a930f86a69a1a2a942b7c6d8f": "PMM",    // pmm
+  "2efed66fb802b5940b1e10a46c77fefc": "LEBNS",  // lebns
+  "66f32a2782a1b4df5206cb3eea76a56d": "VZV",    // vzv
+  "7c5de67a27b1a4e0a317a75f62f35e6b": "CVS",    // cvs
+  "248b18284a2d74c7ac50b7a22dbcb7d2": "REKR",   // rekr
+  "6af2ac32fd92b01ee67426df29277f1c": "VMZ",    // vmz
+  "c00eb9a98e33c734e52f588b63e49aa8": "PO",     // po
+  "21e4d7d73c7b52cf79b1da6fd9ff8dc5": "MP",     // mp
+  "93d362f2d2cb9c67c03d2e1d57a3bcd4": "ADMIN"   // bosss
+};
+
         };
 
         const departmentCode = access[hash];
