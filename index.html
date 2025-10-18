@@ -2,37 +2,94 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>БМЗ — Навігація по підрозділах</title>
-  <link rel="stylesheet" href="styles/style.css">
-</head>
-<body>
-  <header>
-    <h1>📘 Довідник особового складу БМЗ</h1>
-  </header>
-
-  <main>
-    <div class="menu">
-      <button onclick="openPage('upr.html')">Управління</button>
-      <button onclick="openPage('RZB.html')">Рота забезпечення боєприпасами</button>
-      <button onclick="openPage('RZPR.html')">Рота забезпечення продовольством, речовим та ВТМ</button>
-      <button onclick="openPage('PMM.html')">Автомобільний взвод підвозу ПММ</button>
-      <button onclick="openPage('LEBNS.html')">Взвод логістично-евакуаційних БНС</button>
-      <button onclick="openPage('VZV.html')">Відділення зв’язку</button>
-      <button onclick="openPage('CVS.html')">Група ЦВС</button>
-      <button onclick="openPage('REKR.html')">Група рекрутингу</button>
-      <button onclick="openPage('VMZ.html')">Взвод матеріального забезпечення</button>
-      <button onclick="openPage('PO.html')">Парк озброєння</button>
-      <button onclick="openPage('MP.html')">Медичний пункт</button>
-      <hr>
-      <button class="admin-btn" onclick="openPage('admin.html')">👑 Admin режим</button>
-    </div>
-  </main>
-
-  <script>
-    function openPage(page) {
-      window.location.href = page;
+  <title>Штатно-посадова книга БМЗ</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #1e1e1e;
+      color: #eaeaea;
+      margin: 0;
+      padding: 0;
     }
-  </script>
+    h1 {
+      text-align: center;
+      padding: 20px;
+      background-color: #2b2b2b;
+      margin: 0;
+      color: #00c0c4;
+    }
+    table {
+      width: 95%;
+      margin: 20px auto;
+      border-collapse: collapse;
+      font-size: 15px;
+    }
+    th, td {
+      border: 1px solid #333;
+      padding: 8px 10px;
+      text-align: left;
+    }
+    th {
+      background-color: #333;
+      color: #00c0c4;
+    }
+    tr:nth-child(even) {
+      background-color: #2a2a2a;
+    }
+    tr:hover {
+      background-color: #3a3a3a;
+    }
+    a {
+      color: #00c0c4;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>📘 Штатно-посадова книга БМЗ</h1>
+
+  <table id="bmzTable">
+    <thead>
+      <tr>
+        <th>№</th>
+        <th>ПІБ</th>
+        <th>Підрозділ</th>
+        <th>Посада</th>
+        <th>ШПК</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td><a href="soldiers/001_ivanov.html">Іванов Іван Іванович</a></td>
+        <td>Рота забезпечення боєприпасами</td>
+        <td>Командир відділення</td>
+        <td>ШПК-01</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td><a href="soldiers/002_petrenko.html">Петренко Сергій Миколайович</a></td>
+        <td>Рота забезпечення продовольством</td>
+        <td>Начальник складу</td>
+        <td>ШПК-02</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td><a href="soldiers/003_kovtun.html">Ковтун Олександр Петрович</a></td>
+        <td>Автомобільний взвод підвозу ПММ</td>
+        <td>Водій-механік</td>
+        <td>ШПК-03</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <footer style="text-align:center; padding:15px; color:#777;">
+    © 2025 Батальйон матеріального забезпечення
+  </footer>
 </body>
 </html>
