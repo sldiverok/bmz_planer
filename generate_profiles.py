@@ -5,7 +5,6 @@ import re
 CSV_FILE = "bmz.csv"
 OUT_DIR = "soldiers"
 INDEX_FILE = "index.html"
-LOG_FILE = "bad_lines.log"
 
 os.makedirs(OUT_DIR, exist_ok=True)
 
@@ -21,7 +20,7 @@ def transliterate(name):
     result = "".join([table.get(ch.upper(), ch) if ch.isalpha() else ch for ch in name])
     return re.sub(r'[^a-zA-Z0-9]', '', result.lower())
 
-# === Безпечне читання CSV ===
+# === Читаємо CSV ===
 try:
     df = pd.read_csv(
         CSV_FILE,
@@ -91,7 +90,7 @@ for _, row in df.iterrows():
 
 print(f"[ok] Створено {len(df)} файлів у '{OUT_DIR}/'")
 
-# === Формуємо index.html ===
+# === Генеруємо index.html ===
 with open(INDEX_FILE, "w", encoding="utf-8") as f:
     f.write("""<!DOCTYPE html>
 <html lang="uk">
@@ -109,7 +108,7 @@ with open(INDEX_FILE, "w", encoding="utf-8") as f:
     }
     table {width:95%; margin:20px auto; border-collapse:collapse;}
     th,td {border:1px solid #333; padding:6px 10px;}
-    th {background:#333; color:#00c0c4;}
+    th {background:#333; color:#00c0c4; cursor:pointer;}
     tr:nth-child(even){background:#2a2a2a;}
     tr:hover{background:#3a3a3a;}
     a{color:#00c0c4;text-decoration:none;}
@@ -147,4 +146,4 @@ with open(INDEX_FILE, "w", encoding="utf-8") as f:
 
     f.write("</table>\n</body>\n</html>")
 
-print(f"[ok] Оновлено '{INDEX_FILE}' (з пошуком по ПІБ)")
+print(f"[ok] Оновлено '{INDEX_FILE}' (повна таблиця + пошук)")
