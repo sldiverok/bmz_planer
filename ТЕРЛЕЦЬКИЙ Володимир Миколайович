@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>ТЕРЛЕЦЬКИЙ Володимир Миколайович — Дані військовослужбовця</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <div class="card">
+    <h2>Іванов Іван Іванович</h2>
+    <p><strong>Підрозділ:</strong> Управління</p>
+    <p><strong>Посада:</strong> Капелан батальйону</p>
+    <p><strong>Телефон:</strong> <a href="tel:+380501234567">+38 (050) 123-45-67</a></p>
+    <p><strong>Домашня адреса:</strong> м. Львів, вул. Шевченка, 21</p>
+    <p><strong>Додаткова інформація:</strong> Відпустка з 10.10 по 25.10</p>
+    <a href="../index.html" class="back-btn">⬅ Повернутись</a>
+  </div>
+</body>
+</html>
