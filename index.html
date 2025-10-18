@@ -1,138 +1,38 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>БМЗ Планер</title>
-<style>
-  body {
-    background-color: #1f1f1f;
-    color: #e0e0e0;
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 10px;
-  }
-  h1 {
-    text-align: center;
-    color: #00c0c4;
-  }
-  input, select {
-    width: 100%;
-    padding: 8px;
-    margin: 6px 0;
-    border: none;
-    border-radius: 4px;
-    background-color: #333;
-    color: #fff;
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-  }
-  th, td {
-    border: 1px solid #444;
-    padding: 8px;
-    text-align: left;
-  }
-  th {
-    background-color: #2b2b2b;
-    cursor: pointer;
-  }
-  tr:nth-child(even) { background-color: #2a2a2a; }
-  tr:hover { background-color: #333; }
-  .footer {
-    text-align: center;
-    margin-top: 15px;
-    font-size: 12px;
-    color: #888;
-  }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>БМЗ — Навігація по підрозділах</title>
+  <link rel="stylesheet" href="styles/style.css">
 </head>
 <body>
-<h1>📋 БМЗ Планер</h1>
+  <header>
+    <h1>📘 Довідник особового складу БМЗ</h1>
+  </header>
 
-<input type="text" id="searchInput" placeholder="🔎 Пошук по всіх полях...">
-<select id="filterSelect">
-  <option value="">Фільтр за ШПК</option>
-</select>
+  <main>
+    <div class="menu">
+      <button onclick="openPage('upr.html')">Управління</button>
+      <button onclick="openPage('RZB.html')">Рота забезпечення боєприпасами</button>
+      <button onclick="openPage('RZPR.html')">Рота забезпечення продовольством, речовим та ВТМ</button>
+      <button onclick="openPage('PMM.html')">Автомобільний взвод підвозу ПММ</button>
+      <button onclick="openPage('LEBNS.html')">Взвод логістично-евакуаційних БНС</button>
+      <button onclick="openPage('VZV.html')">Відділення зв’язку</button>
+      <button onclick="openPage('CVS.html')">Група ЦВС</button>
+      <button onclick="openPage('REKR.html')">Група рекрутингу</button>
+      <button onclick="openPage('VMZ.html')">Взвод матеріального забезпечення</button>
+      <button onclick="openPage('PO.html')">Парк озброєння</button>
+      <button onclick="openPage('MP.html')">Медичний пункт</button>
+      <hr>
+      <button class="admin-btn" onclick="openPage('admin.html')">👑 Admin режим</button>
+    </div>
+  </main>
 
-<table id="dataTable">
-  <thead>
-    <tr>
-      <th onclick="sortTable(0)">Посада ⬍</th>
-      <th onclick="sortTable(1)">ШПК ⬍</th>
-      <th onclick="sortTable(2)">ПІБ ⬍</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
-
-<div class="footer">© Батальйон матеріального забезпечення</div>
-
-<script>
-const CSV_URL = "https://raw.githubusercontent.com/sldiverok/bmz_planer/main/bmz.csv";
-
-async function loadCSV() {
-  const response = await fetch(CSV_URL);
-  const text = await response.text();
-  const rows = text.split('\n').map(r => r.split(';'));
-  
-  // шукаємо колонки
-  const header = rows[0].map(h => h.trim());
-  const posIdx = header.findIndex(h => /посада/i.test(h));
-  const shpIdx = header.findIndex(h => /шпк/i.test(h));
-  const pibIdx = header.findIndex(h => /(прізв|піб)/i.test(h));
-
-  const tableBody = document.querySelector("#dataTable tbody");
-  const filterSelect = document.getElementById("filterSelect");
-  const seenShpk = new Set();
-
-  rows.slice(1).forEach(r => {
-    if (!r[posIdx] && !r[shpIdx] && !r[pibIdx]) return;
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${r[posIdx] || ""}</td>
-      <td>${r[shpIdx] || ""}</td>
-      <td>${r[pibIdx] || ""}</td>
-    `;
-    tableBody.appendChild(tr);
-
-    const val = r[shpIdx]?.trim();
-    if (val && !seenShpk.has(val)) {
-      seenShpk.add(val);
-      const opt = document.createElement("option");
-      opt.value = val;
-      opt.textContent = val;
-      filterSelect.appendChild(opt);
+  <script>
+    function openPage(page) {
+      window.location.href = page;
     }
-  });
-
-  document.getElementById("searchInput").addEventListener("input", filterTable);
-  document.getElementById("filterSelect").addEventListener("change", filterTable);
-}
-
-function filterTable() {
-  const search = document.getElementById("searchInput").value.toLowerCase();
-  const filter = document.getElementById("filterSelect").value.toLowerCase();
-  const rows = document.querySelectorAll("#dataTable tbody tr");
-  rows.forEach(row => {
-    const text = row.textContent.toLowerCase();
-    const shpk = row.cells[1]?.textContent.toLowerCase();
-    row.style.display = (text.includes(search) && (!filter || shpk === filter)) ? "" : "none";
-  });
-}
-
-function sortTable(colIndex) {
-  const table = document.getElementById("dataTable");
-  const rows = Array.from(table.rows).slice(1);
-  const asc = table.dataset.sortOrder !== "asc";
-  rows.sort((a, b) => a.cells[colIndex].textContent.localeCompare(b.cells[colIndex].textContent, 'uk', {numeric:true}) * (asc ? 1 : -1));
-  table.tBodies[0].append(...rows);
-  table.dataset.sortOrder = asc ? "asc" : "desc";
-}
-
-loadCSV();
-</script>
+  </script>
 </body>
 </html>
