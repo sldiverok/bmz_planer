@@ -23,7 +23,7 @@ def transliterate(name):
 # === Читаємо таблицю з обробкою помилок ===
 bad_lines = []
 try:
-    df = pd.read_csv(CSV_FILE, on_bad_lines='warn', encoding='utf-8')
+    df = pd.read_csv(CSV_FILE, on_bad_lines='skip', encoding='utf-8')
 except Exception as e:
     print(f"[err] Не вдалося прочитати {CSV_FILE}: {e}")
     exit()
