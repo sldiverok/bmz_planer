@@ -20,6 +20,7 @@ async function loadCSV(departmentCode = null, admin = false) {
       console.log("[ok] Авторизація ADMIN успішна");
     }
 
+    // --- Завантаження CSV ---
     const response = await fetch(
       "https://raw.githubusercontent.com/sldiverok/bmz_planer/refs/heads/main/bmz.csv"
     );
@@ -30,6 +31,12 @@ async function loadCSV(departmentCode = null, admin = false) {
       .split("\n")
       .map((r) => r.trim())
       .filter((r) => r.length > 0);
+
+    if (rows.length === 0) {
+      throw new Error("CSV файл порожній або має неправильний формат.");
+    }
+
+    // CSV використовує роздільник ';'
     const headers = rows[0].split(";");
 
     const container = document.getElementById("table-container");
@@ -73,7 +80,7 @@ async function loadCSV(departmentCode = null, admin = false) {
   }
 }
 
-// === Простий MD5 реалізатор для браузера ===
+// === Простий MD5 через CryptoJS ===
 function md5(str) {
   return CryptoJS.MD5(str).toString();
 }
