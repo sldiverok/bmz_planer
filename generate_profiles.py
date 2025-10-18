@@ -34,21 +34,31 @@ except Exception as e:
     print(f"[err] Не вдалося прочитати {CSV_FILE}: {e}")
     exit()
 
-# === Перевірка колонок ===
-if "Прізвище, ім’я та по батькові" not in df.columns:
-    print("[err] У файлі немає колонки 'Прізвище, ім’я та по батькові'.")
-    print("[debug] Знайдені колонки:", list(df.columns))
+# === Автоматичне визначення колонки з ПІБ ===
+pib_col = None
+for c in df.columns:
+    if "ПІБ" in c or "Прізвище" in c:
+        pib_col = c
+        break
+
+if not pib_col:
+    print("[err] Не знайдено колонки з ПІБ.")
+    print("[debug] Колонки у файлі:", list(df.columns))
     exit()
 
 # === Фільтруємо пусті записи ===
-df = df.dropna(subset=["Прізвище, ім’я та по батькові"])
-df = df[df["Прізвище, ім’я та по батькові"].astype(str).str.strip() != ""]
+df = df.dropna(subset=[pib_col])
+df = df[df[pib_col].astype(str).str.strip() != ""]
 
-print(f"[info] Завантажено {len(df)} записів із {CSV_FILE}")
+total = len(df)
+print(f"[info] Завантажено {total} записів із {CSV_FILE}")
+
+if total < 50:
+    print(f"[warn] ⚠️ У таблиці лише {total} записів — можливо, CSV неповний!")
 
 # === Генерація персональних сторінок ===
 for _, row in df.iterrows():
-    pib = str(row.get("Прізвище, ім’я та по батькові", "")).strip()
+    pib = str(row.get(pib_col, "")).strip()
     unit = str(row.get("Підрозділ", "—")).strip()
     posada = str(row.get("Посада", "—")).strip()
     code = str(row.get("ШПК", "—")).strip()
@@ -92,41 +102,41 @@ print(f"[ok] Створено {len(df)} файлів у '{OUT_DIR}/'")
 
 # === Генеруємо index.html ===
 with open(INDEX_FILE, "w", encoding="utf-8") as f:
-    f.write("""<!DOCTYPE html>
+    f.write(f"""<!DOCTYPE html>
 <html lang="uk">
 <head>
   <meta charset="UTF-8">
   <title>📘 Штатно-посадова книга БМЗ</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    body {font-family: Arial, sans-serif; background-color:#1e1e1e; color:#eaeaea;}
-    h1 {text-align:center; margin-top:20px;}
-    input[type=text] {
+    body {{font-family: Arial, sans-serif; background-color:#1e1e1e; color:#eaeaea;}}
+    h1 {{text-align:center; margin-top:20px;}}
+    input[type=text] {{
         display:block; margin:10px auto; padding:8px 12px;
         width:50%; border-radius:8px; border:1px solid #00c0c4;
         background:#2b2b2b; color:#eaeaea;
-    }
-    table {width:95%; margin:20px auto; border-collapse:collapse;}
-    th,td {border:1px solid #333; padding:6px 10px;}
-    th {background:#333; color:#00c0c4; cursor:pointer;}
-    tr:nth-child(even){background:#2a2a2a;}
-    tr:hover{background:#3a3a3a;}
-    a{color:#00c0c4;text-decoration:none;}
+    }}
+    table {{width:95%; margin:20px auto; border-collapse:collapse;}}
+    th,td {{border:1px solid #333; padding:6px 10px;}}
+    th {{background:#333; color:#00c0c4; cursor:pointer;}}
+    tr:nth-child(even){{background:#2a2a2a;}}
+    tr:hover{{background:#3a3a3a;}}
+    a{{color:#00c0c4;text-decoration:none;}}
   </style>
   <script>
-    function filterTable() {
+    function filterTable() {{
       let input = document.getElementById("searchInput");
       let filter = input.value.toUpperCase();
       let table = document.getElementById("soldierTable");
       let tr = table.getElementsByTagName("tr");
-      for (let i = 1; i < tr.length; i++) {
+      for (let i = 1; i < tr.length; i++) {{
         let td = tr[i].getElementsByTagName("td")[1];
-        if (td) {
+        if (td) {{
           let txt = td.textContent || td.innerText;
           tr[i].style.display = txt.toUpperCase().includes(filter) ? "" : "none";
-        }
-      }
-    }
+        }}
+      }}
+    }}
   </script>
 </head>
 <body>
@@ -137,7 +147,7 @@ with open(INDEX_FILE, "w", encoding="utf-8") as f:
 """)
 
     for i, row in df.iterrows():
-        pib = str(row.get("Прізвище, ім’я та по батькові", "")).strip()
+        pib = str(row.get(pib_col, "")).strip()
         unit = str(row.get("Підрозділ", "—")).strip()
         posada = str(row.get("Посада", "—")).strip()
         code = str(row.get("ШПК", "—")).strip()
