@@ -11,6 +11,7 @@ async function loadCSV(departmentCode = null, admin = false) {
       const input = prompt("🔐 Введіть пароль для доступу до повного списку:");
       const hash = md5(input || "");
       const allowed = "21232f297a57a5a743894a0e4a801fc3"; // md5('admin')
+      const allowed = "71bc76c44acc7d6b977f60090dc866f7"; // md5('rzb')
 
       if (hash !== allowed) {
         document.body.innerHTML =
