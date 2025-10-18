@@ -1,29 +1,33 @@
 // === ДОВІДНИК БМЗ з авторизацією ===
-// Скрипт для завантаження bmz.csv і контролю доступу до admin.html
+// Підтримка ролей: ADMIN і RZB
 // Автор: sldiverok squad
 
 async function loadCSV(departmentCode = null, admin = false) {
   try {
     console.log("[info] Завантаження даних з CSV...");
 
-    // --- Перевірка пароля для admin ---
+    // --- Перевірка пароля ---
     if (admin) {
-      const input = prompt("🔐 Введіть пароль для доступу до повного списку:");
+      const input = prompt("🔐 Введіть пароль для доступу:");
       const hash = md5(input || "");
-      const allowed = "21232f297a57a5a743894a0e4a801fc3"; // md5('admin')
-      const allowed = "71bc76c44acc7d6b977f60090dc866f7"; // md5('rzb')
 
-     if (rzb) {
-      const input = prompt("🔐 Введіть пароль для доступу до повного списку:");
-      const hash = md5(input || "");
-      const allowed = "71bc76c44acc7d6b977f60090dc866f7"; // md5('rzb')
+      // MD5 хеші паролів
+      const ADMIN_HASH = "21232f297a57a5a743894a0e4a801fc3"; // admin
+      const RZB_HASH   = "71bc76c44acc7d6b977f60090dc866f7"; // rzb
 
-      if (hash !== allowed) {
+      if (hash === ADMIN_HASH) {
+        console.log("[ok] Авторизація ADMIN успішна");
+        departmentCode = null; // показує всі дані
+      } 
+      else if (hash === RZB_HASH) {
+        console.log("[ok] Авторизація RZB успішна");
+        departmentCode = "RZB"; // показує тільки RZB
+      } 
+      else {
         document.body.innerHTML =
           "<h2 style='color:red;text-align:center;margin-top:40px;'>❌ Доступ заборонено</h2>";
         return;
       }
-      console.log("[ok] Авторизація ADMIN успішна");
     }
 
     // --- Завантаження CSV ---
