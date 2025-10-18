@@ -3,28 +3,123 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>👑 Адмін — Повний список БМЗ</title>
-  <link rel="stylesheet" href="style.css">
-
-  <!-- Підключаємо бібліотеку для MD5 -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-  <script src="script.js"></script>
+  <title>Адмін-панель БМЗ</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <style>
+    body {
+      background-color: #1c1c1c;
+      color: #f5f5f5;
+      font-family: "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #00ffcc;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #333;
+      padding: 8px 12px;
+      text-align: left;
+    }
+    th {
+      background-color: #2c2c2c;
+      color: #00ffff;
+    }
+    tr:nth-child(even) {
+      background-color: #242424;
+    }
+    tr:hover {
+      background-color: #333;
+    }
+    .no-name {
+      color: #888;
+      font-style: italic;
+    }
+    footer {
+      text-align: center;
+      margin-top: 30px;
+      font-size: 0.9em;
+      color: #777;
+    }
+  </style>
 </head>
 <body>
-  <header>
-    <h1>👑 Повний список особового складу БМЗ</h1>
-    <button onclick="window.location.href='index.html'">⬅ Назад</button>
-  </header>
+  <h1>🔐 Адмін-довідник БМЗ</h1>
+  <table id="dataTable"></table>
+  <footer>© 2025 БМЗ squad | sldiverok</footer>
 
-  <main>
-    <div id="table-container" style="margin-top:20px;text-align:center;color:#aaa;">
-      <p>Очікування авторизації...</p>
-    </div>
-  </main>
+  <!-- бібліотеки -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.19.0/js/md5.min.js"></script>
 
   <script>
-    // Викликаємо функцію із прапором admin=true
-    loadCSV(null, true);
+    async function loadCSV() {
+      try {
+        console.log("[info] Адмін-режим — перевірка доступу...");
+
+        const input = prompt("🔐 Введіть пароль для доступу до повного списку:");
+        const hash = md5(input || "");
+        const allowed = "71bc76c44acc7d6b977f60090dc866f7"; // md5('rzb')
+
+        if (hash !== allowed) {
+          alert("⛔ Невірний пароль. Доступ заборонено.");
+          document.body.innerHTML = "<h2 style='text-align:center;color:#ff4444;'>⛔ Доступ заборонено</h2>";
+          return;
+        }
+
+        console.log("[ok] Авторизація успішна. Завантаження CSV...");
+        const response = await fetch("bmz.csv");
+        if (!response.ok) throw new Error("Не вдалося завантажити bmz.csv");
+
+        const csvText = await response.text();
+        const rows = Papa.parse(csvText, { header: true }).data;
+        console.log(`[ok] Завантажено ${rows.length} рядків`);
+        renderTable(rows);
+      } catch (err) {
+        console.error("[error] Помилка при завантаженні CSV:", err);
+        alert("Помилка при завантаженні даних. Перевір bmz.csv або консоль.");
+      }
+    }
+
+    function renderTable(data) {
+      const table = document.getElementById("dataTable");
+      if (!table) return;
+      table.innerHTML = "";
+
+      const headerRow = document.createElement("tr");
+      const headers = ["ШПК", "ВОС", "Посада", "Підрозділ", "ПІБ"];
+      headers.forEach(h => {
+        const th = document.createElement("th");
+        th.textContent = h;
+        headerRow.appendChild(th);
+      });
+      table.appendChild(headerRow);
+
+      data.forEach(row => {
+        const tr = document.createElement("tr");
+        if (!row["ПІБ"] || row["ПІБ"].trim() === "") {
+          row["ПІБ"] = "(немає даних)";
+        }
+        const fields = ["ШПК", "ВОС", "Посада", "Підрозділ", "ПІБ"];
+        fields.forEach(key => {
+          const td = document.createElement("td");
+          td.textContent = row[key] || "";
+          if (key === "ПІБ" && row[key] === "(немає даних)") {
+            td.classList.add("no-name");
+          }
+          tr.appendChild(td);
+        });
+        table.appendChild(tr);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", loadCSV);
   </script>
 </body>
 </html>
