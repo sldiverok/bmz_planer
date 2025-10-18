@@ -58,68 +58,89 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.19.0/js/md5.min.js"></script>
 
-  <script>
-    async function loadCSV() {
-      try {
-        console.log("[info] Адмін-режим — перевірка доступу...");
+ <script>
+async function loadCSV() {
+  try {
+    console.log("[info] Адмін-режим — перевірка доступу...");
 
-        const input = prompt("🔐 Введіть пароль для доступу до повного списку:");
-        const hash = md5(input || "");
-        const allowed = "71bc76c44acc7d6b977f60090dc866f7"; // md5('rzb')
+    const input = prompt("🔐 Введіть пароль для доступу до свого підрозділу:");
+    const hash = md5(input || "");
 
-        if (hash !== allowed) {
-          alert("⛔ Невірний пароль. Доступ заборонено.");
-          document.body.innerHTML = "<h2 style='text-align:center;color:#ff4444;'>⛔ Доступ заборонено</h2>";
-          return;
-        }
+    // === Хеші для різних підрозділів ===
+    const access = {
+      "71bc76c44acc7d6b977f60090dc866f7": "RZB", // md5('rzb')
+      "21232f297a57a5a743894a0e4a801fc3": "ADMIN" // md5('admin')
+    };
 
-        console.log("[ok] Авторизація успішна. Завантаження CSV...");
-        const response = await fetch("bmz.csv");
-        if (!response.ok) throw new Error("Не вдалося завантажити bmz.csv");
+    const departmentCode = access[hash];
+    if (!departmentCode) {
+      alert("⛔ Невірний пароль або відсутній доступ.");
+      document.body.innerHTML = "<h2 style='text-align:center;color:#ff4444;'>⛔ Доступ заборонено</h2>";
+      return;
+    }
 
-        const csvText = await response.text();
-        const rows = Papa.parse(csvText, { header: true }).data;
-        console.log(`[ok] Завантажено ${rows.length} рядків`);
-        renderTable(rows);
-      } catch (err) {
-        console.error("[error] Помилка при завантаженні CSV:", err);
-        alert("Помилка при завантаженні даних. Перевір bmz.csv або консоль.");
+    console.log(`[ok] Авторизація успішна (${departmentCode}). Завантаження CSV...`);
+
+    const response = await fetch("bmz.csv");
+    if (!response.ok) throw new Error("Не вдалося завантажити bmz.csv");
+
+    const csvText = await response.text();
+    const rows = Papa.parse(csvText, { header: true }).data;
+    console.log(`[ok] Завантажено ${rows.length} рядків`);
+
+    // === Якщо ADMIN — показуємо всіх, інакше фільтруємо за кодом ===
+    const filtered = departmentCode === "ADMIN"
+      ? rows
+      : rows.filter(row => (row["ПідрозділКод"] || "").toUpperCase() === departmentCode);
+
+    renderTable(filtered, departmentCode);
+  } catch (err) {
+    console.error("[error] Помилка при завантаженні CSV:", err);
+    alert("Помилка при завантаженні даних. Перевір bmz.csv або консоль.");
+  }
+}
+
+function renderTable(data, dep) {
+  const table = document.getElementById("dataTable");
+  if (!table) return;
+  table.innerHTML = "";
+
+  const headerRow = document.createElement("tr");
+  const headers = ["ШПК", "ВОС", "Посада", "Підрозділ", "ПІБ"];
+  headers.forEach(h => {
+    const th = document.createElement("th");
+    th.textContent = h;
+    headerRow.appendChild(th);
+  });
+  table.appendChild(headerRow);
+
+  data.forEach(row => {
+    const tr = document.createElement("tr");
+    if (!row["ПІБ"] || row["ПІБ"].trim() === "") {
+      row["ПІБ"] = "(немає даних)";
+    }
+    const fields = ["ШПК", "ВОС", "Посада", "Підрозділ", "ПІБ"];
+    fields.forEach(key => {
+      const td = document.createElement("td");
+      td.textContent = row[key] || "";
+      if (key === "ПІБ" && row[key] === "(немає даних)") {
+        td.classList.add("no-name");
       }
-    }
+      tr.appendChild(td);
+    });
+    table.appendChild(tr);
+  });
 
-    function renderTable(data) {
-      const table = document.getElementById("dataTable");
-      if (!table) return;
-      table.innerHTML = "";
+  const label = dep === "ADMIN" ? "Всі підрозділи" : `Підрозділ: ${dep}`;
+  const caption = document.createElement("caption");
+  caption.textContent = label;
+  caption.style.color = "#00ffff";
+  caption.style.marginBottom = "10px";
+  table.prepend(caption);
+}
 
-      const headerRow = document.createElement("tr");
-      const headers = ["ШПК", "ВОС", "Посада", "Підрозділ", "ПІБ"];
-      headers.forEach(h => {
-        const th = document.createElement("th");
-        th.textContent = h;
-        headerRow.appendChild(th);
-      });
-      table.appendChild(headerRow);
+document.addEventListener("DOMContentLoaded", loadCSV);
+</script>
 
-      data.forEach(row => {
-        const tr = document.createElement("tr");
-        if (!row["ПІБ"] || row["ПІБ"].trim() === "") {
-          row["ПІБ"] = "(немає даних)";
-        }
-        const fields = ["ШПК", "ВОС", "Посада", "Підрозділ", "ПІБ"];
-        fields.forEach(key => {
-          const td = document.createElement("td");
-          td.textContent = row[key] || "";
-          if (key === "ПІБ" && row[key] === "(немає даних)") {
-            td.classList.add("no-name");
-          }
-          tr.appendChild(td);
-        });
-        table.appendChild(tr);
-      });
-    }
-
-    document.addEventListener("DOMContentLoaded", loadCSV);
-  </script>
 </body>
 </html>
