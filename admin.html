@@ -1,11 +1,13 @@
-
 <!DOCTYPE html>
 <html lang="uk">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Адмін — Повний список БМЗ</title>
+  <title>👑 Адмін — Повний список БМЗ</title>
   <link rel="stylesheet" href="style.css">
+
+  <!-- Підключаємо бібліотеку для MD5 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
   <script src="script.js"></script>
 </head>
 <body>
@@ -14,10 +16,15 @@
     <button onclick="window.location.href='index.html'">⬅ Назад</button>
   </header>
 
-  <div id="table-container"></div>
+  <main>
+    <div id="table-container" style="margin-top:20px;text-align:center;color:#aaa;">
+      <p>Очікування авторизації...</p>
+    </div>
+  </main>
 
   <script>
-    loadCSV(); // без параметра — показує все
+    // Викликаємо функцію із прапором admin=true
+    loadCSV(null, true);
   </script>
 </body>
 </html>
