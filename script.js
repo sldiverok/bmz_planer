@@ -1,6 +1,6 @@
 // scripts/script.js
 async function loadCSV(departmentCode = null) {
-  const response = await fetch('bmz.csv');
+  const response = await fetch('https://raw.githubusercontent.com/sldiverok/bmz_planer/refs/heads/main/bmz.csv');
   const data = await response.text();
 
   const rows = data.split('\n').map(r => r.trim()).filter(r => r);
