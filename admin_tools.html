@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔧 Admin Tools — генератор MD5 для паролів</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
+  <style>
+    body {
+      background: #1e1e1e;
+      color: #e0e0e0;
+      font-family: "Exo 2", sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      color: #00c0c4;
+      margin-bottom: 10px;
+    }
+
+    .card {
+      background: #2b2b2b;
+      border: 1px solid #00c0c4;
+      border-radius: 10px;
+      max-width: 480px;
+      margin: 40px auto;
+      padding: 20px;
+      box-shadow: 0 0 20px rgba(0, 192, 196, 0.1);
+    }
+
+    input {
+      width: 80%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 6px;
+      border: 1px solid #00c0c4;
+      background: #1e1e1e;
+      color: #fff;
+      font-size: 16px;
+      text-align: center;
+    }
+
+    button {
+      padding: 10px 20px;
+      background: #00c0c4;
+      border: none;
+      border-radius: 8px;
+      color: #000;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 10px;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      background: #00f6ff;
+    }
+
+    .hash-box {
+      background: #111;
+      padding: 10px;
+      border-radius: 6px;
+      word-break: break-all;
+      border: 1px solid #333;
+      margin-top: 10px;
+      font-family: monospace;
+      color: #00c0c4;
+    }
+
+    footer {
+      margin-top: 40px;
+      color: #888;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔧 Admin Tools</h1>
+  <p>Генератор MD5 для налаштування паролів у <b>admin.html</b> / <b>script.js</b></p>
+
+  <div class="card">
+    <h2>1️⃣ Створи новий пароль</h2>
+    <input type="text" id="password" placeholder="Введіть свій пароль">
+    <button onclick="generateHash()">🔐 Згенерувати MD5</button>
+
+    <h3>👉 Результат:</h3>
+    <div id="output" class="hash-box">—</div>
+
+    <h2>2️⃣ Як використати</h2>
+    <p>Скопіюйте цей хеш і вставте його в <b>script.js</b> замість рядка:<br>
+      <code>const allowed = "..."</code>
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>3️⃣ Перевір пароль</h2>
+    <input type="text" id="testPassword" placeholder="Введіть пароль для перевірки">
+    <button onclick="verifyPassword()">✅ Перевірити</button>
+    <div id="verifyResult" style="margin-top:10px;color:#ccc;">—</div>
+  </div>
+
+  <footer>
+    © БМЗ Tools — створено для внутрішнього користування<br>
+    sldiverok squad, 2025
+  </footer>
+
+  <script>
+    // Генерує MD5-хеш для введеного пароля
+    function generateHash() {
+      const pass = document.getElementById("password").value.trim();
+      if (!pass) {
+        document.getElementById("output").textContent = "⚠️ Введіть пароль";
+        return;
+      }
+      const hash = CryptoJS.MD5(pass).toString();
+      document.getElementById("output").textContent = hash;
+    }
+
+    // Перевіряє, чи пароль збігається з поточним дозволеним у script.js
+    const currentHash = "21232f297a57a5a743894a0e4a801fc3"; // md5('admin')
+    function verifyPassword() {
+      const test = document.getElementById("testPassword").value.trim();
+      if (!test) {
+        document.getElementById("verifyResult").textContent = "⚠️ Введіть пароль";
+        return;
+      }
+      const testHash = CryptoJS.MD5(test).toString();
+      if (testHash === currentHash) {
+        document.getElementById("verifyResult").innerHTML = "✅ Пароль правильний!";
+        document.getElementById("verifyResult").style.color = "#00ff88";
+      } else {
+        document.getElementById("verifyResult").innerHTML = "❌ Невірний пароль";
+        document.getElementById("verifyResult").style.color = "#ff5555";
+      }
+    }
+  </script>
+</body>
+</html>
