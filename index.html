@@ -88,7 +88,6 @@
       });
     }
 
-    // Транслітерація кирилиці → латиниця (для назв файлів)
     function translit(str) {
       const map = {
         'А':'A','Б':'B','В':'V','Г':'H','Ґ':'G','Д':'D','Е':'E','Є':'Ye','Ж':'Zh','З':'Z',
@@ -98,41 +97,38 @@
         'а':'a','б':'b','в':'v','г':'h','ґ':'g','д':'d','е':'e','є':'ie','ж':'zh','з':'z',
         'и':'y','і':'i','ї':'i','й':'i','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p',
         'р':'r','с':'s','т':'t','у':'u','ф':'f','х':'kh','ц':'ts','ч':'ch','ш':'sh','щ':'shch',
-        'ю':'iu','я':'ia','ь':'',' ':'_'
+        'ю':'iu','я':'ia','ь':'',' ':'_','-':'_'
       };
       return str.split('').map(ch => map[ch] || ch).join('');
     }
 
-	<script>
-	function renderTable(soldiers, unitCode) {
-	  const tbody = document.getElementById("soldiersBody");
-	  tbody.innerHTML = "";
+    function renderTable(soldiers, unitCode) {
+      const tbody = document.getElementById("soldiersBody");
+      tbody.innerHTML = "";
 
-	  const filtered = soldiers.filter(s =>
-		(s["ПідрозділКод"] || "").trim().toUpperCase() === unitCode.trim().toUpperCase()
-	  );
+      const filtered = soldiers.filter(s =>
+        (s["ПідрозділКод"] || "").trim().toUpperCase() === unitCode.trim().toUpperCase()
+      );
 
-	  if (filtered.length === 0) {
-		tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">Немає даних для підрозділу ${unitCode}</td></tr>`;
-		return;
-	  }
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">Немає даних для підрозділу ${unitCode}</td></tr>`;
+        return;
+      }
 
-	  for (const s of filtered) {
-		const latin = (s["ПІБ_лат"] || "").toLowerCase(); // з Python
-		const link = `soldiers/${latin}.html`;
+      for (const s of filtered) {
+        const latin = (s["ПІБ_лат"] || translit(s["ПІБ"] || "")).toLowerCase();
+        const link = `soldiers/${latin}.html`;
 
-		const row = document.createElement("tr");
-		row.innerHTML = `
-		  <td>${s["Підрозділ"]}</td>
-		  <td>${s["Посада"]}</td>
-		  <td>${s["ШПК"]}</td>
-		  <td><a href="${link}">${s["ПІБ"]}</a></td>
-		`;
-		tbody.appendChild(row);
-	  }
-	}
-	</script>
-
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${s["Підрозділ"]}</td>
+          <td>${s["Посада"]}</td>
+          <td>${s["ШПК"]}</td>
+          <td><a href="${link}">${s["ПІБ"]}</a></td>
+        `;
+        tbody.appendChild(row);
+      }
+    }
 
     (async () => {
       const unitFromUrl = getQueryParam("unit");
