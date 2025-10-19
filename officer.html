@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Офіцерський огляд — БМЗ</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <style>
+    body {
+      background-color: #1c1c1c;
+      color: #f5f5f5;
+      font-family: "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #00c0c4;
+      margin-bottom: 20px;
+    }
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    input, select {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: none;
+      background-color: #2a2a2a;
+      color: #fff;
+      outline: none;
+    }
+    input::placeholder {
+      color: #aaa;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      border-radius: 10px;
+      overflow: hidden;
+      background-color: #2b2b2b;
+    }
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #3a3a3a;
+      text-align: left;
+    }
+    th {
+      background-color: #333;
+    }
+    tr:hover {
+      background-color: #3d3d3d;
+    }
+    a {
+      color: #00c0c4;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .tag {
+      background-color: #444;
+      border-radius: 6px;
+      padding: 2px 6px;
+      font-size: 0.85rem;
+      color: #ccc;
+    }
+    .logout {
+      position: fixed;
+      top: 15px;
+      right: 20px;
+      background-color: #00c0c4;
+      color: #fff;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .logout:hover {
+      background-color: #00969a;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+
+  <button class="logout" onclick="logout()">Вийти</button>
+  <h1>📋 Офіцерський огляд — всі підрозділи БМЗ</h1>
+
+  <div class="filter-bar">
+    <input type="text" id="searchBox" placeholder="🔍 Пошук за ПІБ, посадою чи званням...">
+    <select id="unitFilter">
+      <option value="all">Всі підрозділи</option>
+    </select>
+  </div>
+
+  <table id="bmzTable">
+    <thead>
+      <tr>
+        <th>Підрозділ</th>
+        <th>Посада</th>
+        <th>ПІБ</th>
+        <th>ШПК</th>
+        <th>Військове звання</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const tableBody = document.querySelector("#bmzTable tbody");
+    const searchBox = document.getElementById("searchBox");
+    const unitFilter = document.getElementById("unitFilter");
+    let rowsData = [];
+
+    // Завантажуємо CSV
+    Papa.parse("bmz.csv", {
+      download: true,
+      header: true,
+      delimiter: ";",
+      complete: function(results) {
+        rowsData = results.data.filter(r => r["ПІБ_лат"]);
+        populateUnitFilter(rowsData);
+        renderTable(rowsData);
+      }
+    });
+
+    // Заповнення фільтра підрозділів
+    function populateUnitFilter(data) {
+      const units = [...new Set(data.map(r => r["Підрозділ"]).filter(Boolean))].sort();
+      units.forEach(u => {
+        const option = document.createElement("option");
+        option.value = u;
+        option.textContent = u;
+        unitFilter.appendChild(option);
+      });
+    }
+
+    // Побудова таблиці
+    function renderTable(data) {
+      tableBody.innerHTML = "";
+      data.forEach(row => {
+        const page = `soldiers/${row["ПІБ_лат"]}.html`;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><span class="tag">${row["ПідрозділКод"]}</span> ${row["Підрозділ"]}</td>
+          <td>${row["Посада"] || ""}</td>
+          <td><a href="${page}" target="_blank">${row["ПІБ"]}</a></td>
+          <td>${row["ШПК"] || ""}</td>
+          <td>${row["Військове звання"] || ""}</td>
+        `;
+        tableBody.appendChild(tr);
+      });
+    }
+
+    // Фільтрація та пошук
+    function applyFilters() {
+      const query = searchBox.value.toLowerCase();
+      const selectedUnit = unitFilter.value;
+      const filtered = rowsData.filter(r => {
+        const matchesSearch = Object.values(r).join(" ").toLowerCase().includes(query);
+        const matchesUnit = selectedUnit === "all" || r["Підрозділ"] === selectedUnit;
+        return matchesSearch && matchesUnit;
+      });
+      renderTable(filtered);
+    }
+
+    searchBox.addEventListener("input", applyFilters);
+    unitFilter.addEventListener("change", applyFilters);
+
+    // Кнопка "Вийти"
+    function logout() {
+      sessionStorage.removeItem("bmz_unit");
+      window.location.href = "admin.html";
+    }
+
+    // Захист від прямого входу
+    window.addEventListener("load", () => {
+      const role = sessionStorage.getItem("bmz_unit");
+      if (role !== "OFCR" && role !== "ADMIN") {
+        alert("❌ Доступ заборонено! Увійдіть через адмін-панель.");
+        window.location.href = "admin.html";
+      }
+    });
+  </script>
+
+</body>
+</html>
