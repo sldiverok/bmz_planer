@@ -103,32 +103,36 @@
       return str.split('').map(ch => map[ch] || ch).join('');
     }
 
-    function renderTable(soldiers, unitCode) {
-      const tbody = document.getElementById("soldiersBody");
-      tbody.innerHTML = "";
+	<script>
+	function renderTable(soldiers, unitCode) {
+	  const tbody = document.getElementById("soldiersBody");
+	  tbody.innerHTML = "";
 
-      const filtered = soldiers.filter(s => 
-        (s["ПідрозділКод"] || "").trim().toUpperCase() === unitCode.trim().toUpperCase()
-      );
+	  const filtered = soldiers.filter(s =>
+		(s["ПідрозділКод"] || "").trim().toUpperCase() === unitCode.trim().toUpperCase()
+	  );
 
-      if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">Немає даних для підрозділу ${unitCode}</td></tr>`;
-        return;
-      }
+	  if (filtered.length === 0) {
+		tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">Немає даних для підрозділу ${unitCode}</td></tr>`;
+		return;
+	  }
 
-      for (const s of filtered) {
-        const row = document.createElement("tr");
-        const latin = translit(s["ПІБ"] || "");
-        const link = `soldiers/${latin}.html`;
-        row.innerHTML = `
-          <td>${s["Підрозділ"]}</td>
-          <td>${s["Посада"]}</td>
-          <td>${s["ШПК"]}</td>
-          <td><a href="${link}">${s["ПІБ"]}</a></td>
-        `;
-        tbody.appendChild(row);
-      }
-    }
+	  for (const s of filtered) {
+		const latin = (s["ПІБ_лат"] || "").toLowerCase(); // з Python
+		const link = `soldiers/${latin}.html`;
+
+		const row = document.createElement("tr");
+		row.innerHTML = `
+		  <td>${s["Підрозділ"]}</td>
+		  <td>${s["Посада"]}</td>
+		  <td>${s["ШПК"]}</td>
+		  <td><a href="${link}">${s["ПІБ"]}</a></td>
+		`;
+		tbody.appendChild(row);
+	  }
+	}
+	</script>
+
 
     (async () => {
       const unitFromUrl = getQueryParam("unit");

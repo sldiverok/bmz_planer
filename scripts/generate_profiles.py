@@ -5,7 +5,7 @@ import os
 CSV_FILE = "bmz.csv"
 OUT_DIR = "soldiers"
 
-# === ФУНКЦІЯ ТРАНСЛІТЕРАЦІЇ (українська → латиниця) ===
+# === ФУНКЦІЯ ТРАНСЛІТЕРАЦІЇ (єдина для всієї системи) ===
 def translit(name):
     table = {
         'А':'A','Б':'B','В':'V','Г':'H','Ґ':'G','Д':'D','Е':'E','Є':'Ye','Ж':'Zh','З':'Z',
@@ -15,7 +15,7 @@ def translit(name):
         'а':'a','б':'b','в':'v','г':'h','ґ':'g','д':'d','е':'e','є':'ie','ж':'zh','з':'z',
         'и':'y','і':'i','ї':'i','й':'i','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p',
         'р':'r','с':'s','т':'t','у':'u','ф':'f','х':'kh','ц':'ts','ч':'ch','ш':'sh','щ':'shch',
-        'ю':'iu','я':'ia','ь':'',' ':'_'
+        'ю':'iu','я':'ia','ь':'',' ':'_','-':'_'
     }
     return ''.join(table.get(c, c) for c in name)
 
@@ -84,10 +84,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   </div>
 
   <script>
-    // автоматичне повернення у свій підрозділ
     const unit = sessionStorage.getItem("bmz_unit") || "{unit_code}";
-    const backBtn = document.getElementById("backBtn");
-    backBtn.href = "../index.html?unit=" + encodeURIComponent(unit);
+    document.getElementById("backBtn").href = "../index.html?unit=" + encodeURIComponent(unit);
   </script>
 
 </body>
@@ -110,7 +108,10 @@ def generate_html_pages(soldiers):
         if not name:
             continue
 
-        filename = translit(name.lower()) + ".html"
+        latin_name = translit(name.lower())
+        s["ПІБ_лат"] = latin_name  # створюємо латинський варіант у даних
+
+        filename = latin_name + ".html"
         filepath = os.path.join(OUT_DIR, filename)
 
         html = HTML_TEMPLATE.format(

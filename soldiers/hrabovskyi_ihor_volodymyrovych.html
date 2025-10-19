@@ -62,10 +62,8 @@
   </div>
 
   <script>
-    // автоматичне повернення у свій підрозділ
     const unit = sessionStorage.getItem("bmz_unit") || "MP";
-    const backBtn = document.getElementById("backBtn");
-    backBtn.href = "../index.html?unit=" + encodeURIComponent(unit);
+    document.getElementById("backBtn").href = "../index.html?unit=" + encodeURIComponent(unit);
   </script>
 
 </body>
