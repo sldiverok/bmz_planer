@@ -62,9 +62,7 @@
         <th>ШПК</th>
       </tr>
     </thead>
-    <tbody id="soldiersBody">
-      <!-- Дані підтягуються динамічно -->
-    </tbody>
+    <tbody id="soldiersBody"></tbody>
   </table>
 
   <script>
@@ -79,7 +77,6 @@
       return parseCSV(csvText);
     }
 
-    // --- головна різниця: split по ";" ---
     function parseCSV(csvText) {
       const lines = csvText.split("\n").map(l => l.trim()).filter(Boolean);
       const headers = lines[0].split(";");
@@ -95,10 +92,14 @@
       const tbody = document.getElementById("soldiersBody");
       tbody.innerHTML = "";
 
-      // --- фільтрація по ПідрозділКод ---
-      const filtered = soldiers.filter(s => s["ПідрозділКод"] === unitCode);
+      // нормалізуємо регістр та пробіли
+      const filtered = soldiers.filter(s => 
+        (s["ПідрозділКод"] || "").trim().toUpperCase() === unitCode.trim().toUpperCase()
+      );
+
       if (filtered.length === 0) {
         tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">Немає даних для підрозділу ${unitCode}</td></tr>`;
+        console.log("DEBUG: приклади кодів у CSV:", [...new Set(soldiers.map(s => s["ПідрозділКод"]))]);
         return;
       }
 
@@ -129,22 +130,7 @@
       }
 
       const soldiers = await loadSoldiers();
-      if (currentUnit) {
-        renderTable(soldiers, currentUnit);
-      } else {
-        // fallback — якщо немає unit, показати весь список
-        const tbody = document.getElementById("soldiersBody");
-        for (const s of soldiers) {
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${s["ПІБ"]}</td>
-            <td>${s["Підрозділ"]}</td>
-            <td>${s["Посада"]}</td>
-            <td>${s["ШПК"]}</td>
-          `;
-          tbody.appendChild(row);
-        }
-      }
+      renderTable(soldiers, currentUnit || "");
     })();
   </script>
 
