@@ -108,33 +108,41 @@
 
 
     // Побудова таблиці
-    function renderTable(soldiers, unitCode) {
-      const tbody = document.getElementById("soldiersBody");
-      tbody.innerHTML = "";
+    <script>
+	async function renderTable(soldiers, unitCode) {
+	  const tbody = document.getElementById("soldiersBody");
+	  tbody.innerHTML = "";
 
-      const filtered = soldiers.filter(s =>
-        (s["ПідрозділКод"] || "").trim().toUpperCase() === unitCode.trim().toUpperCase()
-      );
+	  // 🔹 Якщо немає коду підрозділу — показати весь батальйон
+	  const filtered = unitCode
+		? soldiers.filter(s =>
+			(s["ПідрозділКод"] || "").trim().toUpperCase() === unitCode.trim().toUpperCase()
+		  )
+		: soldiers;
 
-      if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">Немає даних для підрозділу ${unitCode}</td></tr>`;
-        return;
-      }
+	  if (filtered.length === 0) {
+		tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">Немає даних для підрозділу ${unitCode}</td></tr>`;
+		return;
+	  }
 
-      for (const s of filtered) {
-        const latin = (s["ПІБ_лат"] && s["ПІБ_лат"].trim()) ? s["ПІБ_лат"].toLowerCase() : translit(s["ПІБ"]);
-        const link = `soldiers/${latin}.html`;
+	  for (const s of filtered) {
+		const latin = (s["ПІБ_лат"] || "").toLowerCase().trim();
 
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${s["Підрозділ"]}</td>
-          <td>${s["Посада"]}</td>
-          <td>${s["ШПК"]}</td>
-          <td><a href="${link}">${s["ПІБ"]}</a></td>
-        `;
-        tbody.appendChild(row);
-      }
-    }
+		// 🔗 Абсолютна адреса сторінки профілю
+		const link = `https://sldiverok.github.io/bmz_planer/soldiers/${latin}.html`;
+
+		const row = document.createElement("tr");
+		row.innerHTML = `
+		  <td>${s["Підрозділ"]}</td>
+		  <td>${s["Посада"]}</td>
+		  <td>${s["ШПК"]}</td>
+		  <td><a href="${link}" target="_blank">${s["ПІБ"]}</a></td>
+		`;
+		tbody.appendChild(row);
+	  }
+	}
+	</script>
+
 
     // Основна логіка
     (async () => {
