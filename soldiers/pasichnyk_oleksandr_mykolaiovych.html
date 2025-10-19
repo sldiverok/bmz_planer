@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ПАСІЧНИК Олександр Миколайович</title>
+  <link rel="icon" type="image/png" href="../favicon.png">
+  <style>
+    body {
+      background-color: #1c1c1c;
+      color: #f5f5f5;
+      font-family: "Segoe UI", sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .card {
+      background-color: #242424;
+      border: 2px solid #00c0c4;
+      border-radius: 12px;
+      padding: 30px 40px;
+      box-shadow: 0 0 12px #00c0c4;
+      max-width: 480px;
+    }
+    h2 {
+      color: #00c0c4;
+      margin-top: 0;
+    }
+    p {
+      margin: 6px 0;
+    }
+    a {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 10px 18px;
+      background-color: #00c0c4;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+    a:hover {
+      background-color: #00969a;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h2>ПАСІЧНИК Олександр Миколайович</h2>
+    <p><strong>Підрозділ:</strong> Рота забезпечення боєприпасами</p>
+    <p><strong>Посада:</strong> Водій</p>
+    <p><strong>ШПК:</strong> Солдат</p>
+    <p><strong>Військове звання:</strong> сержант</p>
+    <p><strong>ВОС:</strong> 790037А</p>
+    <p><strong>Т/р (max):</strong> 5</p>
+
+    <a id="backBtn" href="#">← Повернутись</a>
+  </div>
+
+  <script>
+    // автоматичне повернення у свій підрозділ
+    const unit = sessionStorage.getItem("bmz_unit") || "RZB";
+    const backBtn = document.getElementById("backBtn");
+    backBtn.href = "../index.html?unit=" + encodeURIComponent(unit);
+  </script>
+
+</body>
+</html>
