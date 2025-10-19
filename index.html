@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Довідник БМЗ</title>
+  <title>Список особового складу БМЗ</title>
   <link rel="icon" type="image/png" href="favicon.png">
   <style>
     body {
@@ -14,121 +14,129 @@
       padding: 20px;
     }
     h1 {
+      color: #00c0c4;
       text-align: center;
-      color: #00b0b8;
+      margin-bottom: 20px;
+    }
+    #currentUnitTitle {
+      text-align: center;
+      font-size: 18px;
+      margin-bottom: 25px;
+      color: #cccccc;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 20px;
     }
     th, td {
-      border: 1px solid #333;
-      padding: 8px 12px;
+      border-bottom: 1px solid #333;
+      padding: 10px;
       text-align: left;
     }
     th {
-      background-color: #2c2c2c;
-      color: #00ffff;
-    }
-    tr:nth-child(even) {
-      background-color: #242424;
+      color: #00c0c4;
     }
     tr:hover {
-      background-color: #333;
+      background-color: #2b2b2b;
     }
-    .no-name {
-      color: #888;
-      font-style: italic;
+    a {
+      color: #00c0c4;
+      text-decoration: none;
     }
-    footer {
-      text-align: center;
-      margin-top: 30px;
-      font-size: 0.9em;
-      color: #777;
+    a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
-  <h1>📘 Довідник Батальйону Матеріального Забезпечення</h1>
-  <table id="dataTable"></table>
-  <footer>© 2025 БМЗ squad | sldiverok</footer>
 
-  <!-- Бібліотеки -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.19.0/js/md5.min.js"></script>
+  <h1>Особовий склад батальйону матеріального забезпечення</h1>
+  <div id="currentUnitTitle">Завантаження даних...</div>
+
+  <table id="soldiersTable">
+    <thead>
+      <tr>
+        <th>ПІБ</th>
+        <th>Підрозділ</th>
+        <th>Посада</th>
+        <th>ШПК</th>
+      </tr>
+    </thead>
+    <tbody id="soldiersBody">
+      <!-- Дані підтягуються динамічно -->
+    </tbody>
+  </table>
 
   <script>
-    async function loadCSV(departmentCode = null, admin = false) {
-      try {
-        console.log("[info] Завантаження даних з CSV...");
+    // === ФУНКЦІЇ ===
+    function getQueryParam(name) {
+      const url = new URL(location.href);
+      return url.searchParams.get(name);
+    }
 
-        if (admin) {
-          const input = prompt("🔐 Введіть пароль для доступу до повного списку:");
-          const hash = md5(input || "");
-          const allowed = "71bc76c44acc7d6b977f60090dc866f7"; // md5('rzb')
-          if (hash !== allowed) {
-            alert("⛔ Невірний пароль. Доступ заборонено.");
-            return;
-          }
-        }
+    async function loadSoldiers() {
+      const response = await fetch("https://raw.githubusercontent.com/sldiverok/bmz_planer/main/bmz.csv");
+      const csvText = await response.text();
+      return parseCSV(csvText);
+    }
 
-        const response = await fetch("bmz.csv");
-        if (!response.ok) throw new Error("Не вдалося завантажити bmz.csv");
-        const csvText = await response.text();
-        const rows = Papa.parse(csvText, { header: true }).data;
+    function parseCSV(csvText) {
+      const lines = csvText.split("\n").map(l => l.trim()).filter(Boolean);
+      const headers = lines[0].split(",");
+      return lines.slice(1).map(line => {
+        const values = line.split(",");
+        const obj = {};
+        headers.forEach((h, i) => obj[h.trim()] = values[i] ? values[i].trim() : "");
+        return obj;
+      });
+    }
 
-        console.log(`[ok] Завантажено ${rows.length} рядків`);
+    function renderTable(soldiers, unitCode) {
+      const tbody = document.getElementById("soldiersBody");
+      tbody.innerHTML = "";
 
-        let filtered = departmentCode
-          ? rows.filter(row => row["ПідрозділКод"] === departmentCode)
-          : rows;
+      const filtered = soldiers.filter(s => s["ПідрозділКод"] === unitCode);
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">Немає даних для підрозділу ${unitCode}</td></tr>`;
+        return;
+      }
 
-        renderTable(filtered);
-      } catch (err) {
-        console.error("[error] Помилка при завантаженні CSV:", err);
-        alert("Помилка при завантаженні даних. Перевір bmz.csv або консоль.");
+      for (const s of filtered) {
+        const row = document.createElement("tr");
+        const nameLatin = s["ПІБ_лат"] || s["ПІБ"]; // fallback якщо немає лат
+        const link = `soldiers/${encodeURIComponent(nameLatin)}.html`;
+        row.innerHTML = `
+          <td><a href="${link}">${s["ПІБ"]}</a></td>
+          <td>${s["Підрозділ"]}</td>
+          <td>${s["Посада"]}</td>
+          <td>${s["ШПК"]}</td>
+        `;
+        tbody.appendChild(row);
       }
     }
 
-    function renderTable(data) {
-      const table = document.getElementById("dataTable");
-      if (!table) return;
-      table.innerHTML = "";
+    // === ОСНОВНА ЛОГІКА ===
+    (async () => {
+      const unitFromUrl = getQueryParam("unit");
+      const unitFromSession = sessionStorage.getItem("bmz_unit");
+      const currentUnit = unitFromUrl || unitFromSession;
 
-      const headerRow = document.createElement("tr");
-      const headers = ["ШПК", "ВОС", "Посада", "Підрозділ", "ПІБ"];
-      headers.forEach(h => {
-        const th = document.createElement("th");
-        th.textContent = h;
-        headerRow.appendChild(th);
-      });
-      table.appendChild(headerRow);
+      const title = document.getElementById("currentUnitTitle");
+      if (currentUnit) {
+        title.textContent = `Підрозділ: ${currentUnit}`;
+      } else {
+        title.textContent = "Весь батальйон";
+      }
 
-      data.forEach(row => {
-        const tr = document.createElement("tr");
-        if (!row["ПІБ"] || row["ПІБ"].trim() === "") {
-          row["ПІБ"] = "(немає даних)";
-        }
-        const fields = ["ШПК", "ВОС", "Посада", "Підрозділ", "ПІБ"];
-        fields.forEach(key => {
-          const td = document.createElement("td");
-          td.textContent = row[key] || "";
-          if (key === "ПІБ" && row[key] === "(немає даних)") {
-            td.classList.add("no-name");
-          }
-          tr.appendChild(td);
-        });
-        table.appendChild(tr);
-      });
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      const params = new URLSearchParams(window.location.search);
-      const department = params.get("dep") || null;
-      const adminMode = params.get("admin") === "true";
-      loadCSV(department, adminMode);
-    });
+      const soldiers = await loadSoldiers();
+      if (currentUnit) {
+        renderTable(soldiers, currentUnit);
+      } else {
+        // fallback — якщо немає unit, показати все
+        renderTable(soldiers, "");
+      }
+    })();
   </script>
+
 </body>
 </html>
