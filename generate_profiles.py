@@ -1,159 +1,135 @@
-import pandas as pd
+import csv
 import os
-import re
 
+# === ШЛЯХИ ===
 CSV_FILE = "bmz.csv"
 OUT_DIR = "soldiers"
-INDEX_FILE = "index.html"
 
-os.makedirs(OUT_DIR, exist_ok=True)
-
-# === Функція для латинізації прізвища ===
-def transliterate(name):
+# === ФУНКЦІЯ ТРАНСЛІТЕРАЦІЇ (українська → латиниця) ===
+def translit(name):
     table = {
-        "А": "A","Б": "B","В": "V","Г": "H","Ґ": "G","Д": "D","Е": "E","Є": "Ye",
-        "Ж": "Zh","З": "Z","И": "Y","І": "I","Ї": "Yi","Й": "Y","К": "K","Л": "L",
-        "М": "M","Н": "N","О": "O","П": "P","Р": "R","С": "S","Т": "T","У": "U",
-        "Ф": "F","Х": "Kh","Ц": "Ts","Ч": "Ch","Ш": "Sh","Щ": "Shch","Ю": "Yu",
-        "Я": "Ya","Ь": "","’": "","'": ""
+        'А':'A','Б':'B','В':'V','Г':'H','Ґ':'G','Д':'D','Е':'E','Є':'Ye','Ж':'Zh','З':'Z',
+        'И':'Y','І':'I','Ї':'Yi','Й':'Y','К':'K','Л':'L','М':'M','Н':'N','О':'O','П':'P',
+        'Р':'R','С':'S','Т':'T','У':'U','Ф':'F','Х':'Kh','Ц':'Ts','Ч':'Ch','Ш':'Sh','Щ':'Shch',
+        'Ю':'Yu','Я':'Ya','Ь':'','’':'','\'':'',
+        'а':'a','б':'b','в':'v','г':'h','ґ':'g','д':'d','е':'e','є':'ie','ж':'zh','з':'z',
+        'и':'y','і':'i','ї':'i','й':'i','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p',
+        'р':'r','с':'s','т':'t','у':'u','ф':'f','х':'kh','ц':'ts','ч':'ch','ш':'sh','щ':'shch',
+        'ю':'iu','я':'ia','ь':'',' ':'_'
     }
-    result = "".join([table.get(ch.upper(), ch) if ch.isalpha() else ch for ch in name])
-    return re.sub(r'[^a-zA-Z0-9]', '', result.lower())
+    return ''.join(table.get(c, c) for c in name)
 
-# === Читаємо CSV ===
-try:
-    df = pd.read_csv(
-        CSV_FILE,
-        sep=';',
-        encoding='utf-8',
-        engine='python',
-        on_bad_lines='skip',
-        quotechar='"'
-    )
-except Exception as e:
-    print(f"[err] Не вдалося прочитати {CSV_FILE}: {e}")
-    exit()
-
-# === Автоматичне визначення колонки з ПІБ ===
-pib_col = None
-for c in df.columns:
-    if "ПІБ" in c or "Прізвище" in c:
-        pib_col = c
-        break
-
-if not pib_col:
-    print("[err] Не знайдено колонки з ПІБ.")
-    print("[debug] Колонки у файлі:", list(df.columns))
-    exit()
-
-# === Фільтруємо пусті записи ===
-df = df.dropna(subset=[pib_col])
-df = df[df[pib_col].astype(str).str.strip() != ""]
-
-total = len(df)
-print(f"[info] Завантажено {total} записів із {CSV_FILE}")
-
-if total < 50:
-    print(f"[warn] ⚠️ У таблиці лише {total} записів — можливо, CSV неповний!")
-
-# === Генерація персональних сторінок ===
-for _, row in df.iterrows():
-    pib = str(row.get(pib_col, "")).strip()
-    unit = str(row.get("Підрозділ", "—")).strip()
-    posada = str(row.get("Посада", "—")).strip()
-    code = str(row.get("ШПК", "—")).strip()
-
-    if not pib or pib.lower() == "nan":
-        continue
-
-    filename = transliterate(pib.split()[0]) + ".html"
-    path = os.path.join(OUT_DIR, filename)
-
-    with open(path, "w", encoding="utf-8") as f:
-        f.write(f"""<!DOCTYPE html>
+# === ШАБЛОН HTML ===
+HTML_TEMPLATE = """<!DOCTYPE html>
 <html lang="uk">
 <head>
   <meta charset="UTF-8">
-  <title>{pib} — Дані військовослужбовця</title>
-  <link rel="stylesheet" href="../style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{name}</title>
+  <link rel="icon" type="image/png" href="../favicon.png">
   <style>
-    body {{font-family: Arial, sans-serif; background-color:#1e1e1e; color:#eaeaea;}}
-    .card {{background:#2b2b2b; margin:50px auto; padding:20px; width:420px; border-radius:12px; box-shadow:0 0 10px #00c0c4;}}
-    a {{color:#00c0c4; text-decoration:none;}}
-    .back-btn {{display:inline-block; margin-top:20px; border:1px solid #00c0c4; padding:5px 10px; border-radius:6px;}}
-    .back-btn:hover {{background:#00c0c4; color:#1e1e1e;}}
+    body {{
+      background-color: #1c1c1c;
+      color: #f5f5f5;
+      font-family: "Segoe UI", sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+    }}
+    .card {{
+      background-color: #242424;
+      border: 2px solid #00c0c4;
+      border-radius: 12px;
+      padding: 30px 40px;
+      box-shadow: 0 0 12px #00c0c4;
+      max-width: 480px;
+    }}
+    h2 {{
+      color: #00c0c4;
+      margin-top: 0;
+    }}
+    p {{
+      margin: 6px 0;
+    }}
+    a {{
+      display: inline-block;
+      margin-top: 20px;
+      padding: 10px 18px;
+      background-color: #00c0c4;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: bold;
+    }}
+    a:hover {{
+      background-color: #00969a;
+    }}
   </style>
 </head>
 <body>
+
   <div class="card">
-    <h2>{pib}</h2>
+    <h2>{name}</h2>
     <p><strong>Підрозділ:</strong> {unit}</p>
-    <p><strong>Посада:</strong> {posada}</p>
-    <p><strong>ШПК:</strong> {code}</p>
-    <p><strong>Телефон:</strong> —</p>
-    <p><strong>Адреса:</strong> —</p>
-    <p><strong>Додаткова інформація:</strong> —</p>
-    <a href="../index.html" class="back-btn">⬅ Повернутись</a>
+    <p><strong>Посада:</strong> {position}</p>
+    <p><strong>ШПК:</strong> {rank}</p>
+    <p><strong>Військове звання:</strong> {title}</p>
+    <p><strong>ВОС:</strong> {vos}</p>
+    <p><strong>Т/р (max):</strong> {tr}</p>
+
+    <a id="backBtn" href="#">← Повернутись</a>
   </div>
-</body>
-</html>""")
 
-print(f"[ok] Створено {len(df)} файлів у '{OUT_DIR}/'")
-
-# === Генеруємо index.html ===
-with open(INDEX_FILE, "w", encoding="utf-8") as f:
-    f.write(f"""<!DOCTYPE html>
-<html lang="uk">
-<head>
-  <meta charset="UTF-8">
-  <title>📘 Штатно-посадова книга БМЗ</title>
-  <link rel="stylesheet" href="style.css">
-  <style>
-    body {{font-family: Arial, sans-serif; background-color:#1e1e1e; color:#eaeaea;}}
-    h1 {{text-align:center; margin-top:20px;}}
-    input[type=text] {{
-        display:block; margin:10px auto; padding:8px 12px;
-        width:50%; border-radius:8px; border:1px solid #00c0c4;
-        background:#2b2b2b; color:#eaeaea;
-    }}
-    table {{width:95%; margin:20px auto; border-collapse:collapse;}}
-    th,td {{border:1px solid #333; padding:6px 10px;}}
-    th {{background:#333; color:#00c0c4; cursor:pointer;}}
-    tr:nth-child(even){{background:#2a2a2a;}}
-    tr:hover{{background:#3a3a3a;}}
-    a{{color:#00c0c4;text-decoration:none;}}
-  </style>
   <script>
-    function filterTable() {{
-      let input = document.getElementById("searchInput");
-      let filter = input.value.toUpperCase();
-      let table = document.getElementById("soldierTable");
-      let tr = table.getElementsByTagName("tr");
-      for (let i = 1; i < tr.length; i++) {{
-        let td = tr[i].getElementsByTagName("td")[1];
-        if (td) {{
-          let txt = td.textContent || td.innerText;
-          tr[i].style.display = txt.toUpperCase().includes(filter) ? "" : "none";
-        }}
-      }}
-    }}
+    // автоматичне повернення у свій підрозділ
+    const unit = sessionStorage.getItem("bmz_unit") || "{unit_code}";
+    const backBtn = document.getElementById("backBtn");
+    backBtn.href = "../index.html?unit=" + encodeURIComponent(unit);
   </script>
-</head>
-<body>
-  <h1>📘 Штатно-посадова книга БМЗ</h1>
-  <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="🔍 Пошук за ПІБ...">
-  <table id="soldierTable">
-    <tr><th>№</th><th>ПІБ</th><th>Підрозділ</th><th>Посада</th><th>ШПК</th></tr>
-""")
 
-    for i, row in df.iterrows():
-        pib = str(row.get(pib_col, "")).strip()
-        unit = str(row.get("Підрозділ", "—")).strip()
-        posada = str(row.get("Посада", "—")).strip()
-        code = str(row.get("ШПК", "—")).strip()
-        link = f"./soldiers/{transliterate(pib.split()[0])}.html"
-        f.write(f"<tr><td>{i+1}</td><td><a href='{link}'>{pib}</a></td><td>{unit}</td><td>{posada}</td><td>{code}</td></tr>\n")
+</body>
+</html>
+"""
 
-    f.write("</table>\n</body>\n</html>")
+# === ЗАВАНТАЖЕННЯ CSV ===
+def load_soldiers(path):
+    with open(path, encoding="utf-8") as f:
+        reader = csv.DictReader(f, delimiter=';')
+        return list(reader)
 
-print(f"[ok] Оновлено '{INDEX_FILE}' (повна таблиця + пошук)")
+# === СТВОРЕННЯ СТОРІНОК ===
+def generate_html_pages(soldiers):
+    if not os.path.exists(OUT_DIR):
+        os.makedirs(OUT_DIR)
+
+    for s in soldiers:
+        name = s.get("ПІБ", "").strip()
+        if not name:
+            continue
+
+        filename = translit(name.lower()) + ".html"
+        filepath = os.path.join(OUT_DIR, filename)
+
+        html = HTML_TEMPLATE.format(
+            name=name,
+            unit=s.get("Підрозділ", ""),
+            position=s.get("Посада", ""),
+            rank=s.get("ШПК", ""),
+            title=s.get("Військове звання", ""),
+            vos=s.get("ВОС", ""),
+            tr=s.get("Т/р (max)", ""),
+            unit_code=s.get("ПідрозділКод", "")
+        )
+
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write(html)
+        print(f"[ok] {filename} створено")
+
+# === ЗАПУСК ===
+if __name__ == "__main__":
+    soldiers = load_soldiers(CSV_FILE)
+    generate_html_pages(soldiers)
+    print(f"\n✅ Згенеровано {len(soldiers)} файлів у '{OUT_DIR}/'")
