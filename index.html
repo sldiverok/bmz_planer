@@ -68,7 +68,6 @@
   </table>
 
   <script>
-    // === ФУНКЦІЇ ===
     function getQueryParam(name) {
       const url = new URL(location.href);
       return url.searchParams.get(name);
@@ -80,11 +79,12 @@
       return parseCSV(csvText);
     }
 
+    // --- головна різниця: split по ";" ---
     function parseCSV(csvText) {
       const lines = csvText.split("\n").map(l => l.trim()).filter(Boolean);
-      const headers = lines[0].split(",");
+      const headers = lines[0].split(";");
       return lines.slice(1).map(line => {
-        const values = line.split(",");
+        const values = line.split(";");
         const obj = {};
         headers.forEach((h, i) => obj[h.trim()] = values[i] ? values[i].trim() : "");
         return obj;
@@ -95,6 +95,7 @@
       const tbody = document.getElementById("soldiersBody");
       tbody.innerHTML = "";
 
+      // --- фільтрація по ПідрозділКод ---
       const filtered = soldiers.filter(s => s["ПідрозділКод"] === unitCode);
       if (filtered.length === 0) {
         tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">Немає даних для підрозділу ${unitCode}</td></tr>`;
@@ -103,7 +104,7 @@
 
       for (const s of filtered) {
         const row = document.createElement("tr");
-        const nameLatin = s["ПІБ_лат"] || s["ПІБ"]; // fallback якщо немає лат
+        const nameLatin = (s["ПІБ_лат"] || s["ПІБ"] || "").replace(/\s+/g, "_");
         const link = `soldiers/${encodeURIComponent(nameLatin)}.html`;
         row.innerHTML = `
           <td><a href="${link}">${s["ПІБ"]}</a></td>
@@ -115,7 +116,6 @@
       }
     }
 
-    // === ОСНОВНА ЛОГІКА ===
     (async () => {
       const unitFromUrl = getQueryParam("unit");
       const unitFromSession = sessionStorage.getItem("bmz_unit");
@@ -132,8 +132,18 @@
       if (currentUnit) {
         renderTable(soldiers, currentUnit);
       } else {
-        // fallback — якщо немає unit, показати все
-        renderTable(soldiers, "");
+        // fallback — якщо немає unit, показати весь список
+        const tbody = document.getElementById("soldiersBody");
+        for (const s of soldiers) {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${s["ПІБ"]}</td>
+            <td>${s["Підрозділ"]}</td>
+            <td>${s["Посада"]}</td>
+            <td>${s["ШПК"]}</td>
+          `;
+          tbody.appendChild(row);
+        }
       }
     })();
   </script>
