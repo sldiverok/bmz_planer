@@ -119,84 +119,86 @@
   </table>
 
   <script>
-    const tableBody = document.querySelector("#bmzTable tbody");
-    const searchBox = document.getElementById("searchBox");
-    const unitFilter = document.getElementById("unitFilter");
-    let rowsData = [];
+  const tableBody = document.querySelector("#bmzTable tbody");
+  const searchBox = document.getElementById("searchBox");
+  const unitFilter = document.getElementById("unitFilter");
+  let rowsData = [];
 
-    const userUnit = sessionStorage.getItem("bmz_unit");
+  const userUnit = (sessionStorage.getItem("bmz_unit") || "").trim().toLowerCase();
 
-    // Перевірка доступу
-    window.addEventListener("load", () => {
-      if (!userUnit) {
-        alert("❌ Доступ заборонено! Увійдіть через адмін-панель.");
-        window.location.href = "admin.html";
-      }
-    });
-
-    // Завантажуємо CSV
-    Papa.parse("bmz.csv", {
-      download: true,
-      header: true,
-      delimiter: ";",
-      complete: function(results) {
-        rowsData = results.data; // 🔹 тепер беремо всі рядки
-        fillUnitFilter(rowsData);
-        renderTable(rowsData);
-      }
-    });
-
-    // Фільтр підрозділів
-    function fillUnitFilter(data) {
-      const units = [...new Set(data.map(r => r["Підрозділ"]).filter(Boolean))].sort();
-      units.forEach(u => {
-        const opt = document.createElement("option");
-        opt.value = u;
-        opt.textContent = u;
-        unitFilter.appendChild(opt);
-      });
-    }
-
-    // Рендер таблиці
-    function renderTable(data) {
-      tableBody.innerHTML = "";
-      data.forEach(row => {
-        if (userUnit === "OFCR" || userUnit === "ADMIN" || row["ПідрозділКод"] === userUnit) {
-          const tr = document.createElement("tr");
-          if (!row["ПІБ"]) tr.classList.add("empty-row");
-          tr.innerHTML = `
-            <td><span class="tag">${row["ПідрозділКод"] || ""}</span> ${row["Підрозділ"] || ""}</td>
-            <td>${row["Посада"] || ""}</td>
-            <td>${row["ПІБ"] ? `<a href="soldiers/${row["ПІБ_лат"]}.html" target="_blank">${row["ПІБ"]}</a>` : ""}</td>
-            <td>${row["ШПК"] || ""}</td>
-            <td>${row["Військове звання"] || ""}</td>
-          `;
-          tableBody.appendChild(tr);
-        }
-      });
-    }
-
-    // Пошук + фільтр
-    function applyFilters() {
-      const query = searchBox.value.toLowerCase();
-      const selectedUnit = unitFilter.value;
-      const filtered = rowsData.filter(r => {
-        const matchesSearch = Object.values(r).join(" ").toLowerCase().includes(query);
-        const matchesUnit = selectedUnit === "all" || r["Підрозділ"] === selectedUnit;
-        return matchesSearch && matchesUnit;
-      });
-      renderTable(filtered);
-    }
-
-    searchBox.addEventListener("input", applyFilters);
-    unitFilter.addEventListener("change", applyFilters);
-
-    // Вихід
-    function logout() {
-      sessionStorage.removeItem("bmz_unit");
+  // Перевірка доступу
+  window.addEventListener("load", () => {
+    if (!userUnit) {
+      alert("❌ Доступ заборонено! Увійдіть через адмін-панель.");
       window.location.href = "admin.html";
     }
-  </script>
+  });
+
+  // Завантажуємо CSV
+  Papa.parse("bmz.csv", {
+    download: true,
+    header: true,
+    delimiter: ";",
+    complete: function(results) {
+      rowsData = results.data;
+      fillUnitFilter(rowsData);
+      renderTable(rowsData);
+    }
+  });
+
+  // Фільтр підрозділів
+  function fillUnitFilter(data) {
+    const units = [...new Set(data.map(r => r["Підрозділ"]).filter(Boolean))].sort();
+    units.forEach(u => {
+      const opt = document.createElement("option");
+      opt.value = u;
+      opt.textContent = u;
+      unitFilter.appendChild(opt);
+    });
+  }
+
+  // Рендер таблиці
+  function renderTable(data) {
+    tableBody.innerHTML = "";
+    data.forEach(row => {
+      const rowCode = (row["ПідрозділКод"] || "").trim().toLowerCase();
+      if (userUnit === "ofcr" || userUnit === "admin" || rowCode === userUnit) {
+        const tr = document.createElement("tr");
+        if (!row["ПІБ"]) tr.classList.add("empty-row");
+        tr.innerHTML = `
+          <td><span class="tag">${row["ПідрозділКод"] || ""}</span> ${row["Підрозділ"] || ""}</td>
+          <td>${row["Посада"] || ""}</td>
+          <td>${row["ПІБ"] ? `<a href="soldiers/${row["ПІБ_лат"]}.html" target="_blank">${row["ПІБ"]}</a>` : ""}</td>
+          <td>${row["ШПК"] || ""}</td>
+          <td>${row["Військове звання"] || ""}</td>
+        `;
+        tableBody.appendChild(tr);
+      }
+    });
+  }
+
+  // Пошук + фільтр
+  function applyFilters() {
+    const query = searchBox.value.toLowerCase();
+    const selectedUnit = unitFilter.value;
+    const filtered = rowsData.filter(r => {
+      const matchesSearch = Object.values(r).join(" ").toLowerCase().includes(query);
+      const matchesUnit = selectedUnit === "all" || r["Підрозділ"] === selectedUnit;
+      return matchesSearch && matchesUnit;
+    });
+    renderTable(filtered);
+  }
+
+  searchBox.addEventListener("input", applyFilters);
+  unitFilter.addEventListener("change", applyFilters);
+
+  // Вихід
+  function logout() {
+    sessionStorage.removeItem("bmz_unit");
+    window.location.href = "admin.html";
+  }
+</script>
+
 
 </body>
 </html>
