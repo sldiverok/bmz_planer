@@ -245,36 +245,36 @@
     }
 
     function renderTable(arr) {
-      const tbody = document.querySelector("#bmzTable tbody");
-      tbody.innerHTML = "";
-      arr.forEach(r => {
-        const tr = document.createElement("tr");
-        const posada = (r["Посада"] || "").trim();
-        const pib = (r["ПІБ"] || "").trim();
-        const page = r["ПІБ_лат"] ? `soldiers/${r["ПІБ_лат"]}.html` : "#";
+  const tbody = document.querySelector("#bmzTable tbody");
+  tbody.innerHTML = "";
+  arr.forEach(r => {
+    const tr = document.createElement("tr");
+    const posada = (r["Посада"] || "").trim();
+    const pib = (r["ПІБ"] || "").trim();
+    const page = r["ПІБ_лат"] ? `soldiers/${r["ПІБ_лат"]}.html` : "#";
 
-        const isStructural = structuralPositions.some(p =>
-          posada.toLowerCase() === p.toLowerCase()
-        );
+    const isStructural = structuralPositions.some(p =>
+      posada.toLowerCase() === p.toLowerCase()
+    );
+    const styleStructural = isStructural ? "color:#7CFC00;font-weight:bold;" : "";
 
-        const styleStructural = isStructural ? "color:#7CFC00;font-weight:bold;" : "";
+    tr.innerHTML = `
+      <td contenteditable="true">${r["ПідрозділКод"] || ""} ${r["Підрозділ"] || ""}</td>
+      <td contenteditable="true" style="${styleStructural}">${posada}</td>
+      <td style="cursor:pointer;">${
+        pib
+          ? `<a href="${page}" target="_blank" style="color:#00c0c4;text-decoration:none;">${pib}</a>`
+          : isStructural
+            ? `<b style="color:#7CFC00;">${posada}</b>`
+            : "<i>Не призначено</i>"
+      }</td>
+      <td contenteditable="true">${r["ШПК"] || ""}</td>
+      <td contenteditable="true">${r["Військове звання"] || ""}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
 
-        tr.innerHTML = `
-          <td contenteditable="true">${r["ПідрозділКод"] || ""} ${r["Підрозділ"] || ""}</td>
-          <td contenteditable="true" style="${styleStructural}">${posada}</td>
-          <td contenteditable="true">${
-            pib
-              ? `<a href="${page}" target="_blank">${pib}</a>`
-              : isStructural
-                ? `<b style="color:#7CFC00;">${posada}</b>`
-                : "<i>Не призначено</i>"
-          }</td>
-          <td contenteditable="true">${r["ШПК"] || ""}</td>
-          <td contenteditable="true">${r["Військове звання"] || ""}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
 
     function exportCSV() {
       const csv = Papa.unparse(rowsData, { delimiter: ";" });
