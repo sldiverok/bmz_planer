@@ -2,9 +2,9 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Офіцерський огляд — БМЗ</title>
+  <title>Офіцерський огляд — всі підрозділи БМЗ</title>
   <link rel="icon" type="image/png" href="favicon.png">
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <style>
     body {
       background-color: #1c1c1c;
@@ -16,44 +16,27 @@
     h1 {
       text-align: center;
       color: #00c0c4;
-      margin-bottom: 20px;
-    }
-    .filter-bar {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 15px;
-    }
-    input, select {
-      padding: 8px 12px;
-      border-radius: 6px;
-      border: none;
-      background-color: #2a2a2a;
-      color: #fff;
-      outline: none;
-    }
-    input::placeholder {
-      color: #aaa;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      border-radius: 10px;
-      overflow: hidden;
-      background-color: #2b2b2b;
+      margin-top: 20px;
     }
     th, td {
-      padding: 10px;
-      border-bottom: 1px solid #3a3a3a;
+      border-bottom: 1px solid #333;
+      padding: 8px 12px;
       text-align: left;
     }
     th {
-      background-color: #333;
+      background-color: #222;
     }
-    tr:hover {
-      background-color: #3d3d3d;
+    tr:nth-child(even) {
+      background-color: #252525;
+    }
+    tr.empty-row {
+      background-color: #262626;
+      color: #999;
+      font-style: italic;
     }
     a {
       color: #00c0c4;
@@ -62,41 +45,51 @@
     a:hover {
       text-decoration: underline;
     }
-    .tag {
-      background-color: #444;
-      border-radius: 6px;
-      padding: 2px 6px;
-      font-size: 0.85rem;
-      color: #ccc;
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
     }
-    .logout {
-      position: fixed;
-      top: 15px;
-      right: 20px;
-      background-color: #00c0c4;
+    #searchBox {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: none;
+      width: 240px;
+    }
+    #unitFilter {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: none;
+      background-color: #333;
       color: #fff;
+    }
+    button {
+      background-color: #00c0c4;
       border: none;
       padding: 6px 12px;
       border-radius: 6px;
+      color: #fff;
       cursor: pointer;
-      font-weight: bold;
     }
-    .logout:hover {
+    button:hover {
       background-color: #00969a;
     }
   </style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body>
-
-  <button class="logout" onclick="logout()">Вийти</button>
   <h1>📋 Офіцерський огляд — всі підрозділи БМЗ</h1>
 
-  <div class="filter-bar">
-    <input type="text" id="searchBox" placeholder="🔍 Пошук за ПІБ, посадою чи званням...">
-    <select id="unitFilter">
-      <option value="all">Всі підрозділи</option>
-    </select>
+  <div class="toolbar">
+    <div>
+      🔍 <input type="text" id="searchBox" placeholder="Пошук за ПІБ, посадою...">
+    </div>
+    <div>
+      <select id="unitFilter">
+        <option value="all">Всі підрозділи</option>
+      </select>
+      <button onclick="logout()">Вийти</button>
+    </div>
   </div>
 
   <table id="bmzTable">
@@ -118,19 +111,30 @@
     const unitFilter = document.getElementById("unitFilter");
     let rowsData = [];
 
-    // Завантажуємо CSV
-    Papa.parse("bmz.csv", {
-      download: true,
-      header: true,
-      delimiter: ";",
-      complete: function(results) {
-        rowsData = results.data.filter(r => r["ПІБ_лат"]);
-        populateUnitFilter(rowsData);
-        renderTable(rowsData);
-      }
-    });
+	Papa.parse("bmz.csv", {
+	  download: true,
+	  header: true,
+	  delimiter: ";",
+	  complete: function(results) {
+		rowsData = results.data;
 
-    // Заповнення фільтра підрозділів
+		// 🧩 Діагностика підрозділів
+		const rawUnits = rowsData.map(r => r["Підрозділ"]).filter(Boolean);
+		console.log("[debug] Raw units found:", rawUnits.length);
+		const uniqueUnits = [...new Set(rawUnits)];
+		console.log("[debug] Unique units before cleaning:", uniqueUnits);
+
+		// Основна логіка
+		populateUnitFilter(rowsData);
+		renderTable(rowsData);
+	  },
+	  error: function(err) {
+		console.error("CSV load error:", err);
+	  }
+	});
+
+
+
     function populateUnitFilter(data) {
       const units = [...new Set(data.map(r => r["Підрозділ"]).filter(Boolean))].sort();
       units.forEach(u => {
@@ -141,16 +145,16 @@
       });
     }
 
-    // Побудова таблиці
     function renderTable(data) {
       tableBody.innerHTML = "";
       data.forEach(row => {
-        const page = `soldiers/${row["ПІБ_лат"]}.html`;
         const tr = document.createElement("tr");
+        if (!row["ПІБ"]) tr.classList.add("empty-row");
+        const page = row["ПІБ_лат"] ? `soldiers/${row["ПІБ_лат"]}.html` : "#";
         tr.innerHTML = `
-          <td><span class="tag">${row["ПідрозділКод"]}</span> ${row["Підрозділ"]}</td>
+          <td><b>${row["ПідрозділКод"] || ""}</b> ${row["Підрозділ"] || ""}</td>
           <td>${row["Посада"] || ""}</td>
-          <td><a href="${page}" target="_blank">${row["ПІБ"]}</a></td>
+          <td>${row["ПІБ"] ? `<a href="${page}" target="_blank">${row["ПІБ"]}</a>` : "<i>Не призначено</i>"}</td>
           <td>${row["ШПК"] || ""}</td>
           <td>${row["Військове звання"] || ""}</td>
         `;
@@ -158,7 +162,6 @@
       });
     }
 
-    // Фільтрація та пошук
     function applyFilters() {
       const query = searchBox.value.toLowerCase();
       const selectedUnit = unitFilter.value;
@@ -173,13 +176,11 @@
     searchBox.addEventListener("input", applyFilters);
     unitFilter.addEventListener("change", applyFilters);
 
-    // Кнопка "Вийти"
     function logout() {
       sessionStorage.removeItem("bmz_unit");
       window.location.href = "admin.html";
     }
 
-    // Захист від прямого входу
     window.addEventListener("load", () => {
       const role = sessionStorage.getItem("bmz_unit");
       if (role !== "OFCR" && role !== "ADMIN") {
@@ -188,6 +189,5 @@
       }
     });
   </script>
-
 </body>
 </html>

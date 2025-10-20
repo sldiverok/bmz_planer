@@ -84,6 +84,12 @@
     .logout:hover {
       background-color: #00969a;
     }
+    /* 🔹 підсвітка рядків без ПІБ */
+    tr.empty-row {
+      background-color: #262626;
+      color: #888;
+      font-style: italic;
+    }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
@@ -118,7 +124,6 @@
     const unitFilter = document.getElementById("unitFilter");
     let rowsData = [];
 
-    // Отримуємо роль користувача
     const userUnit = sessionStorage.getItem("bmz_unit");
 
     // Перевірка доступу
@@ -135,13 +140,13 @@
       header: true,
       delimiter: ";",
       complete: function(results) {
-        rowsData = results.data.filter(r => r["ПІБ_лат"]);
+        rowsData = results.data; // 🔹 тепер беремо всі рядки
         fillUnitFilter(rowsData);
         renderTable(rowsData);
       }
     });
 
-    // Заповнює фільтр підрозділів
+    // Фільтр підрозділів
     function fillUnitFilter(data) {
       const units = [...new Set(data.map(r => r["Підрозділ"]).filter(Boolean))].sort();
       units.forEach(u => {
@@ -152,20 +157,17 @@
       });
     }
 
-    // Відображення таблиці
+    // Рендер таблиці
     function renderTable(data) {
       tableBody.innerHTML = "";
       data.forEach(row => {
-        // ✅ Логіка доступу:
-        // офіцери й адміністратори бачать усіх
-        // звичайні користувачі — лише свій підрозділ
         if (userUnit === "OFCR" || userUnit === "ADMIN" || row["ПідрозділКод"] === userUnit) {
-          const page = `soldiers/${row["ПІБ_лат"]}.html`;
           const tr = document.createElement("tr");
+          if (!row["ПІБ"]) tr.classList.add("empty-row");
           tr.innerHTML = `
-            <td><span class="tag">${row["ПідрозділКод"]}</span> ${row["Підрозділ"]}</td>
+            <td><span class="tag">${row["ПідрозділКод"] || ""}</span> ${row["Підрозділ"] || ""}</td>
             <td>${row["Посада"] || ""}</td>
-            <td><a href="${page}" target="_blank">${row["ПІБ"]}</a></td>
+            <td>${row["ПІБ"] ? `<a href="soldiers/${row["ПІБ_лат"]}.html" target="_blank">${row["ПІБ"]}</a>` : ""}</td>
             <td>${row["ШПК"] || ""}</td>
             <td>${row["Військове звання"] || ""}</td>
           `;
@@ -174,24 +176,22 @@
       });
     }
 
-    // Фільтрація
+    // Пошук + фільтр
     function applyFilters() {
       const query = searchBox.value.toLowerCase();
       const selectedUnit = unitFilter.value;
-
       const filtered = rowsData.filter(r => {
         const matchesSearch = Object.values(r).join(" ").toLowerCase().includes(query);
         const matchesUnit = selectedUnit === "all" || r["Підрозділ"] === selectedUnit;
         return matchesSearch && matchesUnit;
       });
-
       renderTable(filtered);
     }
 
     searchBox.addEventListener("input", applyFilters);
     unitFilter.addEventListener("change", applyFilters);
 
-    // Вихід із системи
+    // Вихід
     function logout() {
       sessionStorage.removeItem("bmz_unit");
       window.location.href = "admin.html";
