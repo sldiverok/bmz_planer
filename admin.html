@@ -1,268 +1,289 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Адмін-панель БМЗ</title>
-<link rel="icon" type="image/png" href="favicon.png">
-<style>
-body {
-  background-color: #1c1c1c;
-  color: #f5f5f5;
-  font-family: "Segoe UI", sans-serif;
-  margin: 0;
-  padding: 20px;
-}
-h1 {
-  text-align: center;
-  color: #00c0c4;
-}
-input, select {
-  padding: 8px 12px;
-  border-radius: 6px;
-  border: none;
-  background-color: #2a2a2a;
-  color: #fff;
-  outline: none;
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-  background-color: #2b2b2b;
-  margin-top: 15px;
-}
-th, td {
-  padding: 10px;
-  border-bottom: 1px solid #3a3a3a;
-  text-align: left;
-}
-th {
-  background-color: #333;
-}
-tr:hover {
-  background-color: #3d3d3d;
-}
-a {
-  color: #00c0c4;
-  text-decoration: none;
-}
-a:hover {
-  text-decoration: underline;
-}
-button {
-  background: #00c0c4;
-  border: none;
-  color: #fff;
-  font-weight: bold;
-  border-radius: 6px;
-  padding: 6px 12px;
-  cursor: pointer;
-}
-button:hover {
-  background: #00969a;
-}
-input[contenteditable="true"], td[contenteditable="true"] {
-  border-bottom: 1px dashed #00c0c4;
-  outline: none;
-}
-</style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Адміністративна панель БМЗ</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <style>
+    body {
+      background-color: #1c1c1c;
+      color: #f5f5f5;
+      font-family: "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #00c0c4;
+      margin-bottom: 20px;
+    }
+    .filter-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    input, select, button {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: none;
+      background-color: #2a2a2a;
+      color: #fff;
+      outline: none;
+    }
+    input::placeholder {
+      color: #aaa;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      border-radius: 10px;
+      overflow: hidden;
+      background-color: #2b2b2b;
+    }
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #3a3a3a;
+      text-align: left;
+    }
+    th {
+      background-color: #333;
+    }
+    tr:hover {
+      background-color: #3d3d3d;
+    }
+    a {
+      color: #00c0c4;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .logout {
+      position: fixed;
+      top: 15px;
+      right: 20px;
+      background-color: #00c0c4;
+      color: #fff;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .logout:hover {
+      background-color: #00969a;
+    }
+    .hidden { display: none; }
+    .lime-row { color: #7CFC00; font-weight: bold; }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
-
 <body>
-<h1>Адміністративна панель БМЗ</h1>
 
-<div id="loginBlock">
-  <input type="password" id="adminPass" placeholder="🔐 Введіть пароль адміністратора">
-  <button onclick="login()">Увійти</button>
-</div>
+  <button class="logout" onclick="logout()">Вийти</button>
+  <h1>Адміністративна панель БМЗ</h1>
 
-<div id="panel" style="display:none;">
-  <div class="filter-bar">
-    <select id="unitFilter">
-      <option value="all">Всі підрозділи</option>
-    </select>
-    <button onclick="exportCSV()">⬇️ Завантажити CSV</button>
+  <div id="loginBlock">
+    <input type="password" id="adminPass" placeholder="Введіть пароль...">
+    <button onclick="login()">Увійти</button>
   </div>
 
-  <table id="bmzTable">
-    <thead>
-      <tr>
-        <th>Підрозділ</th>
-        <th>Посада</th>
-        <th>ПІБ</th>
-        <th>ШПК</th>
-        <th>Військове звання</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</div>
+  <div id="panel" class="hidden">
+    <div class="filter-bar">
+      <select id="unitFilter"><option value="all">Всі підрозділи</option></select>
+      <button onclick="exportCSV()">⬇️ Завантажити CSV</button>
+    </div>
 
-<script>
-const structuralPositions = [
-  "Батальйон матеріального забезпечення",
-  "Рота забезпечення боєприпасами",
-  "Автомобільний взвод підвозу боєприпасів",
-  "1 Автомобільне відділення",
-  "2 Автомобільне відділення",
-  "Такелажний взвод",
-  "Такелажне відділення",
-  "Польовий артилерійський склад",
-  "Група зберігання реактивних снарядів",
-  "Група зберігання боєприпасів до наземної артилерії",
-  "Група зберігання інженерних боєприпасів",
-  "Група зберігання стрілецької зброї",
-  "Група зберігання засобів безпілотних авіаційних комплексів",
-  "Рота забезпечення продовольством, речовим та військово-технічним майном",
-  "Взвод забезпечення",
-  "Автомобільне відділення підвозу продовольства, речового і військово-технічного майна",
-  "Склад військово-технічного майна",
-  "Продовольчий склад",
-  "Речовий склад",
-  "Господарчий взвод",
-  "Їдальня",
-  "Ремонтна майстерня речового майна",
-  "Польова лазня",
-  "Склади",
-  "Автомобільний взвод підвозу пального та мастильних матеріалів",
-  "1 Автомобільне відділення підвозу пального та мастильних матеріалів",
-  "2 Автомобільне відділення підвозу пального та мастильних матеріалів",
-  "Склад пального та мастильних матеріалів",
-  "Взвод логістично-евакуаційних безпілотних наземних систем",
-  "1 Відділення логістичних безпілотних наземних комплексів",
-  "2 Відділення логістичних безпілотних наземних комплексів",
-  "Віділення безпілотних авіаційних комплексів",
-  "Відділення зв’язку",
-  "Група забезпечення заходів цивільно-військового співробітництва",
-  "Група забезпечення заходів рекрутингу",
-  "Взвод матеріального забезпечення",
-  "Автомобільне відділення",
-  "Господарче відділення",
-  "Польова лазня",
-  "Пожежна обслуга",
-  "Медичний пункт"
-];
+    <table id="bmzTable">
+      <thead>
+        <tr>
+          <th>Підрозділ</th>
+          <th>Посада</th>
+          <th>ПІБ</th>
+          <th>ШПК</th>
+          <th>Військове звання</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 
-let data = [];
+  <script>
+    const structuralPositions = [
+      "Батальйон матеріального забезпечення",
+      "Рота забезпечення боєприпасами",
+      "Автомобільний взвод підвозу боєприпасів",
+      "1 Автомобільне відділення",
+      "2 Автомобільне відділення",
+      "Такелажний взвод",
+      "Такелажне відділення",
+      "Польовий артилерійський склад",
+      "Група зберігання реактивних снарядів",
+      "Група зберігання боєприпасів до наземної артилерії",
+      "Група зберігання інженерних боєприпасів",
+      "Група зберігання стрілецької зброї",
+      "Група зберігання засобів безпілотних авіаційних комплексів",
+      "Рота забезпечення продовольством, речовим та військово-технічним майном",
+      "Взвод забезпечення",
+      "Автомобільне відділення підвозу продовольства, речового і військово-технічного майна",
+      "Склад військово-технічного майна",
+      "Продовольчий склад",
+      "Речовий склад",
+      "Такелажне відділення",
+      "Господарчий взвод",
+      "Їдальня",
+      "Ремонтна майстерня речового майна",
+      "Польова лазня",
+      "Склади",
+      "Автомобільний взвод підвозу пального та мастильних матеріалів",
+      "1 Автомобільне відділення підвозу пального та мастильних матеріалів",
+      "2 Автомобільне відділення підвозу пального та мастильних матеріалів",
+      "Склад пального та мастильних матеріалів",
+      "Взвод логістично-евакуаційних безпілотних наземних систем",
+      "1 Відділення логістичних безпілотних наземних комплексів",
+      "2 Відділення логістичних безпілотних наземних комплексів",
+      "Віділення безпілотних авіаційних комплексів",
+      "Відділення зв’язку",
+      "Група забезпечення заходів цивільно-військового співробітництва",
+      "Група забезпечення заходів рекрутингу",
+      "Взвод матеріального забезпечення",
+      "Автомобільне відділення",
+      "Господарче відділення",
+      "Польова лазня",
+      "Пожежна обслуга",
+      "Медичний пункт"
+    ];
 
-function login() {
-  const pass = document.getElementById("adminPass").value.trim().toLowerCase();
-  let unitCode = "";
+    let rowsData = [];
 
-  // === Прив’язка логінів до підрозділів ===
-  if (pass === "admin123") unitCode = "ADMIN";
-  else if (pass === "upr123") unitCode = "UPR";
-  else if (pass === "rzb123") unitCode = "RZB";
-  else if (pass === "rzpr123") unitCode = "RZPR";
-  else if (pass === "pmm123") unitCode = "PMM";
-  else if (pass === "lebns123") unitCode = "LEBNS";
-  else if (pass === "vzv123") unitCode = "VZV";
-  else if (pass === "cvs123") unitCode = "CVS";
-  else if (pass === "rekr123") unitCode = "REKR";
-  else if (pass === "vmz123") unitCode = "VMZ";
-  else if (pass === "po123") unitCode = "PO";
-  else if (pass === "mp123") unitCode = "MP";
-  else if (pass === "ofcr123") unitCode = "OFCR";
-  else {
-    alert("❌ Невірний пароль!");
-    return;
-  }
+    function login() {
+      const pass = document.getElementById("adminPass").value.trim().toLowerCase();
+      let unitCode = "";
 
-  // ✅ Зберігаємо роль
-  sessionStorage.setItem("bmz_unit", unitCode);
+      if (pass === "admin123") unitCode = "ADMIN";
+      else if (pass === "ofcr123") unitCode = "OFCR";
+      else if (pass === "upr123") unitCode = "UPR";
+      else if (pass === "rzb123") unitCode = "RZB";
+      else if (pass === "rzpr123") unitCode = "RZPR";
+      else if (pass === "pmm123") unitCode = "PMM";
+      else if (pass === "lebns123") unitCode = "LEBNS";
+      else if (pass === "vzv123") unitCode = "VZV";
+      else if (pass === "cvs123") unitCode = "CVS";
+      else if (pass === "rekr123") unitCode = "REKR";
+      else if (pass === "vmz123") unitCode = "VMZ";
+      else if (pass === "po123") unitCode = "PO";
+      else if (pass === "mp123") unitCode = "MP";
+      else {
+        alert("❌ Невірний пароль!");
+        return;
+      }
 
-  // ✅ Показуємо панель
-  document.getElementById("loginBlock").style.display = "none";
-  document.getElementById("panel").style.display = "block";
-  loadData();
-}
+      sessionStorage.setItem("bmz_unit", unitCode);
+      document.getElementById("loginBlock").style.display = "none";
+      document.getElementById("panel").style.display = "block";
+      loadData();
 
-// --- Автоматичний вхід при активній сесії ---
-window.addEventListener("load", () => {
-  const unitCode = sessionStorage.getItem("bmz_unit");
-  if (unitCode) {
-    document.getElementById("loginBlock").style.display = "none";
-    document.getElementById("panel").style.display = "block";
-    loadData();
-  }
-});
-
-
-function loadData() {
-  Papa.parse("bmz.csv", {
-    download: true,
-    header: true,
-    delimiter: ";",
-    complete: function(res) {
-      data = res.data;
-      fillFilter(data);
-      renderTable(data);
+      if (unitCode !== "ADMIN") {
+        if (unitCode === "OFCR") window.location.href = "officer.html";
+        else window.location.href = "index.html?unit=" + unitCode;
+      }
     }
-  });
-}
 
-function fillFilter(d) {
-  const u = [...new Set(d.map(r => r["Підрозділ"]).filter(Boolean))].sort();
-  const s = document.getElementById("unitFilter");
-  u.forEach(v => {
-    const o = document.createElement("option");
-    o.value = v;
-    o.textContent = v;
-    s.appendChild(o);
-  });
-  s.addEventListener("change", () => {
-    const val = s.value;
-    renderTable(val === "all" ? data : data.filter(r => r["Підрозділ"] === val));
-  });
-}
+    window.addEventListener("load", () => {
+      const unitCode = sessionStorage.getItem("bmz_unit");
+      if (unitCode === "ADMIN") {
+        document.getElementById("loginBlock").style.display = "none";
+        document.getElementById("panel").style.display = "block";
+        loadData();
+      } else if (unitCode === "OFCR") {
+        window.location.href = "officer.html";
+      } else if (unitCode) {
+        window.location.href = "index.html?unit=" + unitCode;
+      }
+    });
 
-function renderTable(arr) {
-  const tbody = document.querySelector("#bmzTable tbody");
-  tbody.innerHTML = "";
-  arr.forEach(r => {
-    const tr = document.createElement("tr");
-    const posada = (r["Посада"] || "").trim();
-    const pib = (r["ПІБ"] || "").trim();
-    const page = r["ПІБ_лат"] ? `soldiers/${r["ПІБ_лат"]}.html` : "#";
+    function logout() {
+      sessionStorage.removeItem("bmz_unit");
+      window.location.href = "admin.html";
+    }
 
-    // Якщо посада входить до списку structuralPositions — відображаємо її як "підрозділ"
-    const isStructural = structuralPositions.some(p =>
-      posada.toLowerCase() === p.toLowerCase()
-    );
+    function loadData() {
+      Papa.parse("bmz.csv", {
+        download: true,
+        header: true,
+        delimiter: ";",
+        complete: function(results) {
+          rowsData = results.data.filter(r => r["Підрозділ"]);
+          fillUnitFilter(rowsData);
+          renderTable(rowsData);
+        }
+      });
+    }
 
-    tr.innerHTML = `
-      <td contenteditable="true">${r["ПідрозділКод"] || ""} ${r["Підрозділ"] || ""}</td>
-      <td contenteditable="true">${posada}</td>
-      <td contenteditable="true">${
-        pib
-          ? `<a href="${page}" target="_blank">${pib}</a>`
-          : isStructural
-            ? `<b style='color:#00c0c4;'>${posada}</b>`
-            : "<i>Не призначено</i>"
-      }</td>
-      <td contenteditable="true">${r["ШПК"] || ""}</td>
-      <td contenteditable="true">${r["Військове звання"] || ""}</td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
+    function fillUnitFilter(data) {
+      const unitFilter = document.getElementById("unitFilter");
+      const units = [...new Set(data.map(r => r["Підрозділ"]).filter(Boolean))].sort();
+      units.forEach(u => {
+        const opt = document.createElement("option");
+        opt.value = u;
+        opt.textContent = u;
+        unitFilter.appendChild(opt);
+      });
+      unitFilter.addEventListener("change", applyFilters);
+    }
 
+    function applyFilters() {
+      const selectedUnit = document.getElementById("unitFilter").value;
+      const filtered = selectedUnit === "all"
+        ? rowsData
+        : rowsData.filter(r => r["Підрозділ"] === selectedUnit);
+      renderTable(filtered);
+    }
 
-function exportCSV() {
-  const rows = [["Підрозділ","Посада","ПІБ","ШПК","Військове звання"]];
-  document.querySelectorAll("#bmzTable tbody tr").forEach(tr=>{
-    const cols = tr.querySelectorAll("td");
-    rows.push(Array.from(cols).map(td=>td.innerText.trim()));
-  });
-  const csv = Papa.unparse(rows);
-  const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "bmz_admin_export.csv";
-  a.click();
-}
-</script>
+    function renderTable(arr) {
+      const tbody = document.querySelector("#bmzTable tbody");
+      tbody.innerHTML = "";
+      arr.forEach(r => {
+        const tr = document.createElement("tr");
+        const posada = (r["Посада"] || "").trim();
+        const pib = (r["ПІБ"] || "").trim();
+        const page = r["ПІБ_лат"] ? `soldiers/${r["ПІБ_лат"]}.html` : "#";
+
+        const isStructural = structuralPositions.some(p =>
+          posada.toLowerCase() === p.toLowerCase()
+        );
+
+        const styleStructural = isStructural ? "color:#7CFC00;font-weight:bold;" : "";
+
+        tr.innerHTML = `
+          <td contenteditable="true">${r["ПідрозділКод"] || ""} ${r["Підрозділ"] || ""}</td>
+          <td contenteditable="true" style="${styleStructural}">${posada}</td>
+          <td contenteditable="true">${
+            pib
+              ? `<a href="${page}" target="_blank">${pib}</a>`
+              : isStructural
+                ? `<b style="color:#7CFC00;">${posada}</b>`
+                : "<i>Не призначено</i>"
+          }</td>
+          <td contenteditable="true">${r["ШПК"] || ""}</td>
+          <td contenteditable="true">${r["Військове звання"] || ""}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function exportCSV() {
+      const csv = Papa.unparse(rowsData, { delimiter: ";" });
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "bmz_export.csv";
+      link.click();
+    }
+  </script>
 </body>
 </html>
