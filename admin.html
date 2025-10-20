@@ -147,24 +147,47 @@ const structuralPositions = [
 let data = [];
 
 function login() {
-  const pass = document.getElementById("adminPass").value.trim();
-  if (pass === "admin123") {
-    sessionStorage.setItem("bmz_unit", "ADMIN");
-    document.getElementById("loginBlock").style.display = "none";
-    document.getElementById("panel").style.display = "block";
-    loadData();
-  } else {
+  const pass = document.getElementById("adminPass").value.trim().toLowerCase();
+  let unitCode = "";
+
+  // === Прив’язка логінів до підрозділів ===
+  if (pass === "admin123") unitCode = "ADMIN";
+  else if (pass === "upr123") unitCode = "UPR";
+  else if (pass === "rzb123") unitCode = "RZB";
+  else if (pass === "rzpr123") unitCode = "RZPR";
+  else if (pass === "pmm123") unitCode = "PMM";
+  else if (pass === "lebns123") unitCode = "LEBNS";
+  else if (pass === "vzv123") unitCode = "VZV";
+  else if (pass === "cvs123") unitCode = "CVS";
+  else if (pass === "rekr123") unitCode = "REKR";
+  else if (pass === "vmz123") unitCode = "VMZ";
+  else if (pass === "po123") unitCode = "PO";
+  else if (pass === "mp123") unitCode = "MP";
+  else if (pass === "ofcr123") unitCode = "OFCR";
+  else {
     alert("❌ Невірний пароль!");
+    return;
   }
+
+  // ✅ Зберігаємо роль
+  sessionStorage.setItem("bmz_unit", unitCode);
+
+  // ✅ Показуємо панель
+  document.getElementById("loginBlock").style.display = "none";
+  document.getElementById("panel").style.display = "block";
+  loadData();
 }
 
+// --- Автоматичний вхід при активній сесії ---
 window.addEventListener("load", () => {
-  if (sessionStorage.getItem("bmz_unit") === "ADMIN") {
+  const unitCode = sessionStorage.getItem("bmz_unit");
+  if (unitCode) {
     document.getElementById("loginBlock").style.display = "none";
     document.getElementById("panel").style.display = "block";
     loadData();
   }
 });
+
 
 function loadData() {
   Papa.parse("bmz.csv", {
