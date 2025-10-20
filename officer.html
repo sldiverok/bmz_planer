@@ -126,10 +126,19 @@
           });
 
           // === нечутливе до регістру порівняння коду підрозділу ===
-          const filteredData = data.filter(row => {
-            const csvCode = (row["ПідрозділКод"] || "").toLowerCase().trim();
-            return csvCode === unitCode.toLowerCase().trim();
-          });
+      let filteredData = [];
+      
+      if (unitCode === "OFCR") {
+        // офіцер бачить усі підрозділи
+        filteredData = data;
+      } else {
+        // решта бачать тільки свій підрозділ
+        filteredData = data.filter(row => {
+          const csvCode = (row["ПідрозділКод"] || "").trim().toLowerCase();
+          return csvCode === unitCode.trim().toLowerCase();
+        });
+      }
+
 
           renderTable(filteredData);
         })
