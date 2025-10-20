@@ -6,163 +6,87 @@
   <title>Офіцерська панель БМЗ</title>
   <link rel="icon" type="image/png" href="favicon.png">
   <style>
-    body {
-      background-color: #1c1c1c;
-      color: #f5f5f5;
-      font-family: "Segoe UI", sans-serif;
-      text-align: center;
-      padding: 20px;
-    }
-    h1 {
-      color: #00c0c4;
-      margin-bottom: 20px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: #2b2b2b;
-    }
-    th, td {
-      padding: 10px;
-      border: 1px solid #444;
-    }
-    th {
-      background-color: #00c0c4;
-      color: #1c1c1c;
-    }
-    tr:nth-child(even) {
-      background-color: #242424;
-    }
-    a {
-      color: #00e0ff;
-      text-decoration: none;
-    }
-    a:hover {
-      text-decoration: underline;
-    }
-    .login-block {
-      margin-bottom: 20px;
-    }
-    input {
-      padding: 8px;
-      width: 200px;
-      text-align: center;
-      border: none;
-      border-radius: 4px;
-    }
-    button {
-      padding: 8px 16px;
-      background: #00c0c4;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      color: #1c1c1c;
-      font-weight: bold;
-    }
-    button:hover {
-      background: #00e0ff;
-    }
+    body{background:#1c1c1c;color:#f5f5f5;font-family:"Segoe UI",sans-serif;margin:0;padding:20px;}
+    h1{text-align:center;color:#00c0c4;margin-bottom:20px;}
+    .filter-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:15px;}
+    input,select{padding:8px 12px;border-radius:6px;border:none;background:#2a2a2a;color:#fff;}
+    input::placeholder{color:#aaa;}
+    table{width:100%;border-collapse:collapse;border-radius:10px;overflow:hidden;background:#2b2b2b;}
+    th,td{padding:10px;border-bottom:1px solid #3a3a3a;text-align:left;}
+    th{background:#333;}
+    tr:hover{background:#3d3d3d;}
+    a{color:#00c0c4;text-decoration:none;} a:hover{text-decoration:underline;}
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body>
   <h1>Офіцерська панель БМЗ</h1>
-  <div class="login-block" id="login-block">
-    <input type="password" id="password" placeholder="Введіть пароль">
+  <div class="filter-bar">
+    <input type="password" id="password" placeholder="🔐 Введіть пароль...">
     <button onclick="login()">Увійти</button>
+    <select id="unitFilter"><option value="all">Всі підрозділи</option></select>
   </div>
-  <div id="content" style="display:none;">
-    <table>
-      <thead>
-        <tr>
-          <th>Підрозділ</th>
-          <th>Посада</th>
-          <th>ПІБ</th>
-          <th>ШПК</th>
-          <th>Військове звання</th>
-        </tr>
-      </thead>
-      <tbody id="table-body"></tbody>
-    </table>
-  </div>
+  <table id="bmzTable">
+    <thead><tr><th>Підрозділ</th><th>Посада</th><th>ПІБ</th><th>ШПК</th><th>Військове звання</th></tr></thead>
+    <tbody></tbody>
+  </table>
 
   <script>
-    const tableBody = document.getElementById("table-body");
-    const content = document.getElementById("content");
-    const loginBlock = document.getElementById("login-block");
+    const tableBody=document.querySelector("#bmzTable tbody");
+    let data=[],unitCode="";
+    const structuralPositions=[/* вставляємо той самий масив як у index.html */];
 
-    function login() {
-      const login = document.getElementById("password").value.trim();
-      let unitCode = "";
-
-      // === Прив'язка логінів до підрозділів ===
-      if (login === "upr123") unitCode = "upr";
-      else if (login === "rzb123") unitCode = "rzb";
-      else if (login === "rzpr123") unitCode = "rzpr";
-      else if (login === "pmm123") unitCode = "pmm";
-      else if (login === "lebns123") unitCode = "lebns";
-      else if (login === "vzv123") unitCode = "vzv";
-      else if (login === "cvs123") unitCode = "cvs";
-      else if (login === "rekr123") unitCode = "rekr";
-      else if (login === "vmz123") unitCode = "vmz";
-      else if (login === "po123") unitCode = "po";
-      else if (login === "mp123") unitCode = "mp";
-      else if (login === "ofcr123") unitCode = "OFCR";
-      else {
-        alert("❌ Невірний пароль!");
-        return;
-      }
-
-      loginBlock.style.display = "none";
-      content.style.display = "block";
-
-      fetch("bmz.csv")
-        .then(response => response.text())
-        .then(text => {
-          const rows = text.split("\n").map(r => r.split(";"));
-          const headers = rows[0];
-          const data = rows.slice(1).map(r => {
-            const obj = {};
-            headers.forEach((h, i) => obj[h.trim()] = (r[i] || "").trim());
-            return obj;
-          });
-
-          // === нечутливе до регістру порівняння коду підрозділу ===
-      let filteredData = [];
-      
-      if (unitCode === "OFCR") {
-        // офіцер бачить усі підрозділи
-        filteredData = data;
-      } else {
-        // решта бачать тільки свій підрозділ
-        filteredData = data.filter(row => {
-          const csvCode = (row["ПідрозділКод"] || "").trim().toLowerCase();
-          return csvCode === unitCode.trim().toLowerCase();
-        });
-      }
-
-
-          renderTable(filteredData);
-        })
-        .catch(err => {
-          console.error("Помилка читання CSV:", err);
-          alert("⚠️ Помилка завантаження даних!");
-        });
+    function login(){
+      const login=document.getElementById("password").value.trim();
+      if(login==="ofcr123")unitCode="OFCR";
+      else if(login==="upr123")unitCode="upr";
+      else if(login==="rzb123")unitCode="rzb";
+      else if(login==="pmm123")unitCode="pmm";
+      else{alert("❌ Невірний пароль!");return;}
+      fetchData();
     }
 
-    function renderTable(data) {
-      tableBody.innerHTML = "";
-      data.forEach(row => {
-        const tr = document.createElement("tr");
-        if (!row["ПІБ"]) tr.classList.add("empty-row");
-        const page = row["ПІБ_лат"] ? `soldiers/${row["ПІБ_лат"]}.html` : "#";
-        tr.innerHTML = `
-          <td><b>${row["ПідрозділКод"] || ""}</b> ${row["Підрозділ"] || ""}</td>
-          <td>${row["Посада"] || ""}</td>
-          <td>${row["ПІБ"] ? `<a href="${page}" target="_blank">${row["ПІБ"]}</a>` : "<i>Не призначено</i>"}</td>
-          <td>${row["ШПК"] || ""}</td>
-          <td>${row["Військове звання"] || ""}</td>
-        `;
-        tableBody.appendChild(tr);
+    function fetchData(){
+      Papa.parse("bmz.csv",{download:true,header:true,delimiter:";",complete:r=>{
+        data=r.data;
+        fillFilter(data);
+        render(data);
+      }});
+    }
+
+    function fillFilter(d){
+      const units=[...new Set(d.map(r=>r["Підрозділ"]).filter(Boolean))].sort();
+      const sel=document.getElementById("unitFilter");
+      sel.innerHTML='<option value="all">Всі підрозділи</option>';
+      units.forEach(u=>{const o=document.createElement("option");o.value=u;o.textContent=u;sel.appendChild(o);});
+      sel.addEventListener("change",applyFilter);
+    }
+
+    function applyFilter(){
+      const val=document.getElementById("unitFilter").value;
+      render(val==="all"?data:data.filter(r=>r["Підрозділ"]===val));
+    }
+
+    function render(arr){
+      tableBody.innerHTML="";
+      arr.forEach(r=>{
+        if(unitCode==="OFCR"||r["ПідрозділКод"]===unitCode){
+          const tr=document.createElement("tr");
+          const page=r["ПІБ_лат"]?`soldiers/${r["ПІБ_лат"]}.html`:"#";
+          tr.innerHTML=`
+          <td><b>${r["ПідрозділКод"]||""}</b> ${r["Підрозділ"]||""}</td>
+          <td>${r["Посада"]||""}</td>
+          <td>${
+            r["ПІБ"]
+              ? `<a href="${page}" target="_blank">${r["ПІБ"]}</a>`
+              : structuralPositions.includes(r["Посада"])
+                ? `<b style="color:#00c0c4;">${r["Посада"]}</b>`
+                : "<i>Не призначено</i>"
+          }</td>
+          <td>${r["ШПК"]||""}</td>
+          <td>${r["Військове звання"]||""}</td>`;
+          tableBody.appendChild(tr);
+        }
       });
     }
   </script>
