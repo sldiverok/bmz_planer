@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Список особового складу БМЗ</title>
+  <title>БМЗ — особовий склад</title>
   <link rel="icon" type="image/png" href="favicon.png">
   <style>
     body {
@@ -14,30 +14,46 @@
       padding: 20px;
     }
     h1 {
-      color: #00c0c4;
       text-align: center;
+      color: #00c0c4;
       margin-bottom: 20px;
     }
-    #currentUnitTitle {
-      text-align: center;
-      font-size: 18px;
-      margin-bottom: 25px;
-      color: #cccccc;
+    .filter-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    input, select {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: none;
+      background-color: #2a2a2a;
+      color: #fff;
+      outline: none;
+    }
+    input::placeholder {
+      color: #aaa;
     }
     table {
       width: 100%;
       border-collapse: collapse;
+      border-radius: 10px;
+      overflow: hidden;
+      background-color: #2b2b2b;
     }
     th, td {
-      border-bottom: 1px solid #333;
       padding: 10px;
+      border-bottom: 1px solid #3a3a3a;
       text-align: left;
     }
     th {
-      color: #00c0c4;
+      background-color: #333;
     }
     tr:hover {
-      background-color: #2b2b2b;
+      background-color: #3d3d3d;
     }
     a {
       color: #00c0c4;
@@ -46,92 +62,140 @@
     a:hover {
       text-decoration: underline;
     }
+    .tag {
+      background-color: #444;
+      border-radius: 6px;
+      padding: 2px 6px;
+      font-size: 0.85rem;
+      color: #ccc;
+    }
+    .logout {
+      position: fixed;
+      top: 15px;
+      right: 20px;
+      background-color: #00c0c4;
+      color: #fff;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .logout:hover {
+      background-color: #00969a;
+    }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body>
 
-  <h1>Особовий склад батальйону матеріального забезпечення</h1>
-  <div id="currentUnitTitle">Завантаження даних...</div>
+  <button class="logout" onclick="logout()">Вийти</button>
+  <h1>📋 Особовий склад БМЗ</h1>
 
-  <table id="soldiersTable">
+  <div class="filter-bar">
+    <input type="text" id="searchBox" placeholder="🔍 Пошук за ПІБ, посадою чи званням...">
+    <select id="unitFilter">
+      <option value="all">Всі підрозділи</option>
+    </select>
+  </div>
+
+  <table id="bmzTable">
     <thead>
       <tr>
         <th>Підрозділ</th>
         <th>Посада</th>
-        <th>ШПК</th>
         <th>ПІБ</th>
+        <th>ШПК</th>
+        <th>Військове звання</th>
       </tr>
     </thead>
-    <tbody id="soldiersBody"></tbody>
+    <tbody></tbody>
   </table>
 
   <script>
-    // ===== Допоміжні функції =====
-    function getQueryParam(name) {
-      const url = new URL(location.href);
-      return url.searchParams.get(name);
-    }
+    const tableBody = document.querySelector("#bmzTable tbody");
+    const searchBox = document.getElementById("searchBox");
+    const unitFilter = document.getElementById("unitFilter");
+    let rowsData = [];
 
-    async function loadSoldiers() {
-      const response = await fetch("https://raw.githubusercontent.com/sldiverok/bmz_planer/main/bmz.csv");
-      const csvText = await response.text();
-      return parseCSV(csvText);
-    }
+    // Отримуємо роль користувача
+    const userUnit = sessionStorage.getItem("bmz_unit");
 
-    function parseCSV(csvText) {
-      const lines = csvText.split("\n").map(l => l.trim()).filter(Boolean);
-      const headers = lines[0].split(";");
-      return lines.slice(1).map(line => {
-        const values = line.split(";");
-        const obj = {};
-        headers.forEach((h, i) => obj[h.trim()] = values[i] ? values[i].trim() : "");
-        return obj;
+    // Перевірка доступу
+    window.addEventListener("load", () => {
+      if (!userUnit) {
+        alert("❌ Доступ заборонено! Увійдіть через адмін-панель.");
+        window.location.href = "admin.html";
+      }
+    });
+
+    // Завантажуємо CSV
+    Papa.parse("bmz.csv", {
+      download: true,
+      header: true,
+      delimiter: ";",
+      complete: function(results) {
+        rowsData = results.data.filter(r => r["ПІБ_лат"]);
+        fillUnitFilter(rowsData);
+        renderTable(rowsData);
+      }
+    });
+
+    // Заповнює фільтр підрозділів
+    function fillUnitFilter(data) {
+      const units = [...new Set(data.map(r => r["Підрозділ"]).filter(Boolean))].sort();
+      units.forEach(u => {
+        const opt = document.createElement("option");
+        opt.value = u;
+        opt.textContent = u;
+        unitFilter.appendChild(opt);
       });
     }
 
-    // ===== Основна функція рендеру =====
-    async function renderTable(soldiers, unitCode) {
-      const tbody = document.getElementById("soldiersBody");
-      tbody.innerHTML = "";
-
-      const filtered = unitCode
-        ? soldiers.filter(s =>
-            (s["ПідрозділКод"] || "").trim().toUpperCase() === unitCode.trim().toUpperCase()
-          )
-        : soldiers;
-
-      if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">Немає даних для підрозділу ${unitCode}</td></tr>`;
-        return;
-      }
-
-      for (const s of filtered) {
-        const latin = (s["ПІБ_лат"] || "").toLowerCase().trim();
-        const link = `https://sldiverok.github.io/bmz_planer/soldiers/${latin}.html`;
-
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${s["Підрозділ"]}</td>
-          <td>${s["Посада"]}</td>
-          <td>${s["ШПК"]}</td>
-          <td><a href="${link}" target="_blank">${s["ПІБ"]}</a></td>
-        `;
-        tbody.appendChild(row);
-      }
+    // Відображення таблиці
+    function renderTable(data) {
+      tableBody.innerHTML = "";
+      data.forEach(row => {
+        // ✅ Логіка доступу:
+        // офіцери й адміністратори бачать усіх
+        // звичайні користувачі — лише свій підрозділ
+        if (userUnit === "OFCR" || userUnit === "ADMIN" || row["ПідрозділКод"] === userUnit) {
+          const page = `soldiers/${row["ПІБ_лат"]}.html`;
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td><span class="tag">${row["ПідрозділКод"]}</span> ${row["Підрозділ"]}</td>
+            <td>${row["Посада"] || ""}</td>
+            <td><a href="${page}" target="_blank">${row["ПІБ"]}</a></td>
+            <td>${row["ШПК"] || ""}</td>
+            <td>${row["Військове звання"] || ""}</td>
+          `;
+          tableBody.appendChild(tr);
+        }
+      });
     }
 
-    // ===== Ініціалізація сторінки =====
-    (async () => {
-      const unitFromUrl = getQueryParam("unit");
-      const unitFromSession = sessionStorage.getItem("bmz_unit");
-      const currentUnit = unitFromUrl || unitFromSession;
+    // Фільтрація
+    function applyFilters() {
+      const query = searchBox.value.toLowerCase();
+      const selectedUnit = unitFilter.value;
 
-      const title = document.getElementById("currentUnitTitle");
-      title.textContent = currentUnit ? `Підрозділ: ${currentUnit}` : "Весь батальйон";
+      const filtered = rowsData.filter(r => {
+        const matchesSearch = Object.values(r).join(" ").toLowerCase().includes(query);
+        const matchesUnit = selectedUnit === "all" || r["Підрозділ"] === selectedUnit;
+        return matchesSearch && matchesUnit;
+      });
 
-      const soldiers = await loadSoldiers();
-      renderTable(soldiers, currentUnit || "");
-    })();
+      renderTable(filtered);
+    }
+
+    searchBox.addEventListener("input", applyFilters);
+    unitFilter.addEventListener("change", applyFilters);
+
+    // Вихід із системи
+    function logout() {
+      sessionStorage.removeItem("bmz_unit");
+      window.location.href = "admin.html";
+    }
   </script>
 
 </body>

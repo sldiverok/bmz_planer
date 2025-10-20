@@ -58,20 +58,48 @@
   <script>
     // список підрозділів та їхніх паролів
     const units = {
-      "UPR": "upr123",
-      "RZB": "rzb123",
-      "RZPR": "rzpr123",
-      "PMM": "pmm123",
-      "LEBNS": "lebns123",
-      "VZV": "vzv123",
-      "CVS": "cvs123",
-      "REKR": "rekr123",
-      "VMZ": "vmz123",
-      "PO": "po123",
-      "MP": "mp123",
-      "OFCR": "ofcr123",   // ✅ нова роль — офіцер
-      "ADMIN": "admin123"
-    };
+  "UPR": "upr123",
+  "RZB": "rzb123",
+  "RZPR": "rzpr123",
+  "PMM": "pmm123",
+  "LEBNS": "lebns123",
+  "VZV": "vzv123",
+  "CVS": "cvs123",
+  "REKR": "rekr123",
+  "VMZ": "vmz123",
+  "PO": "po123",
+  "MP": "mp123",
+  "OFCR": "ofcr123",   // ✅ офіцер
+  "ADMIN": "admin123"  // ✅ адмін
+};
+
+function checkAccess() {
+  const pass = document.getElementById("password").value.trim();
+  const message = document.getElementById("message");
+  let found = null;
+
+  for (const [unit, unitPass] of Object.entries(units)) {
+    if (pass === unitPass) {
+      found = unit;
+      break;
+    }
+  }
+
+  if (found) {
+    sessionStorage.setItem("bmz_unit", found);
+
+    // маршрутизація
+    if (found === "ADMIN") {
+      window.location.href = "admin_full.html";
+    } else if (found === "OFCR") {
+      window.location.href = "officer.html";
+    } else {
+      window.location.href = `index.html?unit=${encodeURIComponent(found)}`;
+    }
+  } else {
+    message.textContent = "❌ Невірний пароль!";
+  }
+}
 
     function checkAccess() {
       const pass = document.getElementById("password").value.trim();
