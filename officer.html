@@ -2,147 +2,141 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8">
-  <title>Офіцерський огляд — всі підрозділи БМЗ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Офіцерська панель БМЗ</title>
   <link rel="icon" type="image/png" href="favicon.png">
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <style>
     body {
       background-color: #1c1c1c;
       color: #f5f5f5;
       font-family: "Segoe UI", sans-serif;
-      margin: 0;
+      text-align: center;
       padding: 20px;
     }
     h1 {
-      text-align: center;
       color: #00c0c4;
+      margin-bottom: 20px;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 20px;
+      background: #2b2b2b;
     }
     th, td {
-      border-bottom: 1px solid #333;
-      padding: 8px 12px;
-      text-align: left;
+      padding: 10px;
+      border: 1px solid #444;
     }
     th {
-      background-color: #222;
+      background-color: #00c0c4;
+      color: #1c1c1c;
     }
     tr:nth-child(even) {
-      background-color: #252525;
-    }
-    tr.empty-row {
-      background-color: #262626;
-      color: #999;
-      font-style: italic;
+      background-color: #242424;
     }
     a {
-      color: #00c0c4;
+      color: #00e0ff;
       text-decoration: none;
     }
     a:hover {
       text-decoration: underline;
     }
-    .toolbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
+    .login-block {
+      margin-bottom: 20px;
     }
-    #searchBox {
-      padding: 6px 10px;
-      border-radius: 6px;
+    input {
+      padding: 8px;
+      width: 200px;
+      text-align: center;
       border: none;
-      width: 240px;
-    }
-    #unitFilter {
-      padding: 6px 10px;
-      border-radius: 6px;
-      border: none;
-      background-color: #333;
-      color: #fff;
+      border-radius: 4px;
     }
     button {
-      background-color: #00c0c4;
+      padding: 8px 16px;
+      background: #00c0c4;
       border: none;
-      padding: 6px 12px;
-      border-radius: 6px;
-      color: #fff;
+      border-radius: 4px;
       cursor: pointer;
+      color: #1c1c1c;
+      font-weight: bold;
     }
     button:hover {
-      background-color: #00969a;
+      background: #00e0ff;
     }
   </style>
 </head>
 <body>
-  <h1>📋 Офіцерський огляд — всі підрозділи БМЗ</h1>
-
-  <div class="toolbar">
-    <div>
-      🔍 <input type="text" id="searchBox" placeholder="Пошук за ПІБ, посадою...">
-    </div>
-    <div>
-      <select id="unitFilter">
-        <option value="all">Всі підрозділи</option>
-      </select>
-      <button onclick="logout()">Вийти</button>
-    </div>
+  <h1>Офіцерська панель БМЗ</h1>
+  <div class="login-block" id="login-block">
+    <input type="password" id="password" placeholder="Введіть пароль">
+    <button onclick="login()">Увійти</button>
+  </div>
+  <div id="content" style="display:none;">
+    <table>
+      <thead>
+        <tr>
+          <th>Підрозділ</th>
+          <th>Посада</th>
+          <th>ПІБ</th>
+          <th>ШПК</th>
+          <th>Військове звання</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
   </div>
 
-  <table id="bmzTable">
-    <thead>
-      <tr>
-        <th>Підрозділ</th>
-        <th>Посада</th>
-        <th>ПІБ</th>
-        <th>ШПК</th>
-        <th>Військове звання</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
   <script>
-    const tableBody = document.querySelector("#bmzTable tbody");
-    const searchBox = document.getElementById("searchBox");
-    const unitFilter = document.getElementById("unitFilter");
-    let rowsData = [];
+    const tableBody = document.getElementById("table-body");
+    const content = document.getElementById("content");
+    const loginBlock = document.getElementById("login-block");
 
-	Papa.parse("bmz.csv", {
-	  download: true,
-	  header: true,
-	  delimiter: ";",
-	  complete: function(results) {
-		rowsData = results.data;
+    function login() {
+      const login = document.getElementById("password").value.trim();
+      let unitCode = "";
 
-		// 🧩 Діагностика підрозділів
-		const rawUnits = rowsData.map(r => r["Підрозділ"]).filter(Boolean);
-		console.log("[debug] Raw units found:", rawUnits.length);
-		const uniqueUnits = [...new Set(rawUnits)];
-		console.log("[debug] Unique units before cleaning:", uniqueUnits);
+      // === Прив'язка логінів до підрозділів ===
+      if (login === "upr123") unitCode = "upr";
+      else if (login === "rzb123") unitCode = "rzb";
+      else if (login === "rzpr123") unitCode = "rzpr";
+      else if (login === "pmm123") unitCode = "pmm";
+      else if (login === "lebns123") unitCode = "lebns";
+      else if (login === "vzv123") unitCode = "vzv";
+      else if (login === "cvs123") unitCode = "cvs";
+      else if (login === "rekr123") unitCode = "rekr";
+      else if (login === "vmz123") unitCode = "vmz";
+      else if (login === "po123") unitCode = "po";
+      else if (login === "mp123") unitCode = "mp";
+      else {
+        alert("❌ Невірний пароль!");
+        return;
+      }
 
-		// Основна логіка
-		populateUnitFilter(rowsData);
-		renderTable(rowsData);
-	  },
-	  error: function(err) {
-		console.error("CSV load error:", err);
-	  }
-	});
+      loginBlock.style.display = "none";
+      content.style.display = "block";
 
+      fetch("bmz.csv")
+        .then(response => response.text())
+        .then(text => {
+          const rows = text.split("\n").map(r => r.split(";"));
+          const headers = rows[0];
+          const data = rows.slice(1).map(r => {
+            const obj = {};
+            headers.forEach((h, i) => obj[h.trim()] = (r[i] || "").trim());
+            return obj;
+          });
 
+          // === нечутливе до регістру порівняння коду підрозділу ===
+          const filteredData = data.filter(row => {
+            const csvCode = (row["ПідрозділКод"] || "").toLowerCase().trim();
+            return csvCode === unitCode.toLowerCase().trim();
+          });
 
-    function populateUnitFilter(data) {
-      const units = [...new Set(data.map(r => r["Підрозділ"]).filter(Boolean))].sort();
-      units.forEach(u => {
-        const option = document.createElement("option");
-        option.value = u;
-        option.textContent = u;
-        unitFilter.appendChild(option);
-      });
+          renderTable(filteredData);
+        })
+        .catch(err => {
+          console.error("Помилка читання CSV:", err);
+          alert("⚠️ Помилка завантаження даних!");
+        });
     }
 
     function renderTable(data) {
@@ -161,33 +155,6 @@
         tableBody.appendChild(tr);
       });
     }
-
-    function applyFilters() {
-      const query = searchBox.value.toLowerCase();
-      const selectedUnit = unitFilter.value;
-      const filtered = rowsData.filter(r => {
-        const matchesSearch = Object.values(r).join(" ").toLowerCase().includes(query);
-        const matchesUnit = selectedUnit === "all" || r["Підрозділ"] === selectedUnit;
-        return matchesSearch && matchesUnit;
-      });
-      renderTable(filtered);
-    }
-
-    searchBox.addEventListener("input", applyFilters);
-    unitFilter.addEventListener("change", applyFilters);
-
-    function logout() {
-      sessionStorage.removeItem("bmz_unit");
-      window.location.href = "admin.html";
-    }
-
-    window.addEventListener("load", () => {
-      const role = sessionStorage.getItem("bmz_unit");
-      if (role !== "OFCR" && role !== "ADMIN") {
-        alert("❌ Доступ заборонено! Увійдіть через адмін-панель.");
-        window.location.href = "admin.html";
-      }
-    });
   </script>
 </body>
 </html>
