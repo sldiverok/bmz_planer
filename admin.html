@@ -199,15 +199,23 @@ function renderTable(arr) {
   tbody.innerHTML = "";
   arr.forEach(r => {
     const tr = document.createElement("tr");
+    const posada = (r["Посада"] || "").trim();
+    const pib = (r["ПІБ"] || "").trim();
     const page = r["ПІБ_лат"] ? `soldiers/${r["ПІБ_лат"]}.html` : "#";
+
+    // Якщо посада входить до списку structuralPositions — відображаємо її як "підрозділ"
+    const isStructural = structuralPositions.some(p =>
+      posada.toLowerCase() === p.toLowerCase()
+    );
+
     tr.innerHTML = `
       <td contenteditable="true">${r["ПідрозділКод"] || ""} ${r["Підрозділ"] || ""}</td>
-      <td contenteditable="true">${r["Посада"] || ""}</td>
+      <td contenteditable="true">${posada}</td>
       <td contenteditable="true">${
-        r["ПІБ"]
-          ? `<a href="${page}" target="_blank">${r["ПІБ"]}</a>`
-          : structuralPositions.includes(r["Посада"])
-            ? `<b style='color:#00c0c4;'>${r["Посада"]}</b>`
+        pib
+          ? `<a href="${page}" target="_blank">${pib}</a>`
+          : isStructural
+            ? `<b style='color:#00c0c4;'>${posada}</b>`
             : "<i>Не призначено</i>"
       }</td>
       <td contenteditable="true">${r["ШПК"] || ""}</td>
@@ -216,6 +224,7 @@ function renderTable(arr) {
     tbody.appendChild(tr);
   });
 }
+
 
 function exportCSV() {
   const rows = [["Підрозділ","Посада","ПІБ","ШПК","Військове звання"]];
