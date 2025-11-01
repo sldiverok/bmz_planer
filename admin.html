@@ -7,283 +7,287 @@
   <link rel="icon" type="image/png" href="favicon.png">
   <style>
     body {
-      background-color: #1c1c1c;
+      background-color: #1a1a1a;
       color: #f5f5f5;
       font-family: "Segoe UI", sans-serif;
       margin: 0;
-      padding: 20px;
+      padding: 0;
     }
-    h1 {
+    header {
+      background-color: #111;
+      padding: 15px;
       text-align: center;
+      font-size: 1.6em;
       color: #00c0c4;
-      margin-bottom: 20px;
+      border-bottom: 2px solid #00c0c4;
     }
-    .filter-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 15px;
-    }
-    input, select, button {
-      padding: 8px 12px;
-      border-radius: 6px;
-      border: none;
-      background-color: #2a2a2a;
-      color: #fff;
-      outline: none;
-    }
-    input::placeholder {
-      color: #aaa;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      border-radius: 10px;
-      overflow: hidden;
-      background-color: #2b2b2b;
-    }
-    th, td {
-      padding: 10px;
-      border-bottom: 1px solid #3a3a3a;
-      text-align: left;
-    }
-    th {
-      background-color: #333;
-    }
-    tr:hover {
-      background-color: #3d3d3d;
-    }
-    a {
-      color: #00c0c4;
-      text-decoration: none;
-    }
-    a:hover {
-      text-decoration: underline;
-    }
-    .logout {
-      position: fixed;
+    #logout {
+      position: absolute;
       top: 15px;
       right: 20px;
       background-color: #00c0c4;
-      color: #fff;
+      color: #111;
       border: none;
       padding: 6px 12px;
+      font-size: 14px;
       border-radius: 6px;
       cursor: pointer;
+    }
+    select {
+      margin: 15px 20px;
+      background-color: #2a2a2a;
+      color: #fff;
+      border: 1px solid #444;
+      border-radius: 6px;
+      padding: 5px 10px;
+    }
+    table {
+      width: 96%;
+      margin: 0 auto 30px auto;
+      border-collapse: collapse;
+    }
+    th, td {
+      border-bottom: 1px solid #333;
+      padding: 10px;
+      text-align: left;
+    }
+    th {
+      background-color: #222;
+      color: #8aff8a;
+    }
+    tr:hover td {
+      background-color: #252525;
+    }
+    td a, .pib-link {
+      color: #00c0c4;
+      text-decoration: none;
       font-weight: bold;
+      cursor: pointer;
     }
-    .logout:hover {
-      background-color: #00969a;
+    td a:hover, .pib-link:hover {
+      color: #80ffff;
     }
-    .hidden { display: none; }
-    .lime-row { color: #7CFC00; font-weight: bold; }
+    footer {
+      text-align: center;
+      font-size: 0.9em;
+      color: #888;
+      padding-bottom: 20px;
+    }
+
+    /* Підрозділи-роздільники */
+    .divider-row td {
+      background-color: #3a3000;
+      color: #ffeb80;
+      font-weight: bold;
+      text-align: center;
+      border-top: 2px solid #555;
+      border-bottom: 2px solid #555;
+      padding: 8px 0;
+    }
+
+    /* Кольори ШПК */
+    .shpk-green, .rank-green { color: #80ff80; }
+    .shpk-red, .rank-red { color: #ff7070; }
+
+    /* Модальне фото */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      z-index: 9999;
+      opacity: 0;
+      transition: opacity 0.4s ease, background 0.4s ease;
+    }
+    .modal.active {
+      background: rgba(0,0,0,0.9);
+      opacity: 1;
+    }
+    .modal img {
+      max-width: 60%;
+      border: 3px solid #9fffa1;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+    .modal img:hover { transform: scale(1.02); }
+    .modal button {
+      margin-top: 15px;
+      padding: 6px 14px;
+      background: #00c0c4;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .modal button:hover { background: #22d4d8; }
   </style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body>
+<header id="header">Адміністративна панель БМЗ</header>
+<button id="logout" style="display:none;">🚪 Вийти</button>
 
-  <button class="logout" onclick="logout()">Вийти</button>
-  <h1>Адміністративна панель БМЗ</h1>
+<select id="unitFilter">
+  <option value="all">Всі підрозділи</option>
+</select>
 
-  <div id="loginBlock">
-    <input type="password" id="adminPass" placeholder="Введіть пароль...">
-    <button onclick="login()">Увійти</button>
-  </div>
+<table id="dataTable">
+  <thead>
+    <tr>
+      <th>Підрозділ</th>
+      <th>Посада</th>
+      <th>ПІБ</th>
+      <th>ШПК</th>
+      <th>Військове звання</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
 
-  <div id="panel" class="hidden">
-    <div class="filter-bar">
-      <select id="unitFilter"><option value="all">Всі підрозділи</option></select>
-      <button onclick="exportCSV()">⬇️ Завантажити CSV</button>
-    </div>
+<footer>© 2025 Батальйон матеріального забезпечення | Внутрішня система обліку</footer>
 
-    <table id="bmzTable">
-      <thead>
-        <tr>
-          <th>Підрозділ</th>
-          <th>Посада</th>
-          <th>ПІБ</th>
-          <th>ШПК</th>
-          <th>Військове звання</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+<script>
+// === Прості паролі ролей ===
+const roles = {
+  admin: "admin123", upr: "upr123", rzb: "rzb123", rzpr: "rzpr123", pmm: "pmm123",
+  lebns: "lebns123", vzv: "vzv123", cvs: "cvs123", rekr: "rekr123", vmz: "vmz123", po: "po123", mp: "mp123"
+};
 
-  <script>
-    const structuralPositions = [
-      "Батальйон матеріального забезпечення",
-      "Рота забезпечення боєприпасами",
-      "Автомобільний взвод підвозу боєприпасів",
-      "1 Автомобільне відділення",
-      "2 Автомобільне відділення",
-      "Такелажний взвод",
-      "Такелажне відділення",
-      "Польовий артилерійський склад",
-      "Група зберігання реактивних снарядів",
-      "Група зберігання боєприпасів до наземної артилерії",
-      "Група зберігання інженерних боєприпасів",
-      "Група зберігання стрілецької зброї",
-      "Група зберігання засобів безпілотних авіаційних комплексів",
-      "Рота забезпечення продовольством, речовим та військово-технічним майном",
-      "Взвод забезпечення",
-      "Автомобільне відділення підвозу продовольства, речового і військово-технічного майна",
-      "Склад військово-технічного майна",
-      "Продовольчий склад",
-      "Речовий склад",
-      "Такелажне відділення",
-      "Господарчий взвод",
-      "Їдальня",
-      "Ремонтна майстерня речового майна",
-      "Польова лазня",
-      "Склади",
-      "Автомобільний взвод підвозу пального та мастильних матеріалів",
-      "1 Автомобільне відділення підвозу пального та мастильних матеріалів",
-      "2 Автомобільне відділення підвозу пального та мастильних матеріалів",
-      "Склад пального та мастильних матеріалів",
-      "Взвод логістично-евакуаційних безпілотних наземних систем",
-      "1 Відділення логістичних безпілотних наземних комплексів",
-      "2 Відділення логістичних безпілотних наземних комплексів",
-      "Віділення безпілотних авіаційних комплексів",
-      "Відділення зв’язку",
-      "Група забезпечення заходів цивільно-військового співробітництва",
-      "Група забезпечення заходів рекрутингу",
-      "Взвод матеріального забезпечення",
-      "Автомобільне відділення",
-      "Господарче відділення",
-      "Польова лазня",
-      "Пожежна обслуга",
-      "Медичний пункт"
-    ];
+// === Список підрозділів (для роздільників) ===
+const unitNames = [
+  "Батальйон матеріального забезпечення","Рота забезпечення боєприпасами","Автомобільний взвод підвозу боєприпасів",
+  "1 Автомобільне відділення","2 Автомобільне відділення","Такелажний взвод","Такелажне відділення","Польовий артилерійський склад",
+  "Група зберігання боєприпасів до наземної артилерії","Група зберігання інженерних боєприпасів","Група зберігання стрілецької зброї",
+  "Група зберігання засобів безпілотних авіаційних комплексів","Рота забезпечення продовольством, речовим та військово-технічним майном",
+  "Взвод забезпечення","Автомобільне відділення підвозу продовольства, речового і військово-технічного майна",
+  "Склад військово-технічного майна","Продовольчий склад","Речовий склад","Господарчий взвод","Їдальня",
+  "Ремонтна майстерня речового майна","Польова лазня","Склади","Автомобільний взвод підвозу пального та мастильних матеріалів",
+  "1 Автомобільне відділення підвозу пального та мастильних матеріалів","2 Автомобільне відділення підвозу пального та мастильних матеріалів",
+  "Взвод логістично-евакуаційних безпілотних наземних систем","1 Відділення логістичних безпілотних наземних комплексів",
+  "2 Відділення логістичних безпілотних наземних комплексів","Віділення безпілотних авіаційних комплексів","Відділення зв’язку",
+  "Група забезпечення заходів цивільно-військового співробітництва","Група забезпечення заходів рекрутингу","Взвод матеріального забезпечення",
+  "Автомобільне відділення","Господарче відділення","Польова лазня","Пожежна обслуга","Медичний пункт"
+];
 
-    let rowsData = [];
+// === Перевірка доступу ===
+async function checkAccess() {
+  const pass = prompt("🔐 Введіть пароль для входу:");
+  let role = null;
+  for (const [key, value] of Object.entries(roles)) if (pass === value) role = key;
 
-    function login() {
-      const pass = document.getElementById("adminPass").value.trim().toLowerCase();
-      let unitCode = "";
+  if (!role) {
+    document.body.innerHTML = "<h2 style='color:#ff6;text-align:center;margin-top:50px;'>❌ Доступ заборонено</h2>";
+    throw new Error("Unauthorized");
+  }
 
-      if (pass === "admin123") unitCode = "ADMIN";
-      else if (pass === "ofcr123") unitCode = "OFCR";
-      else if (pass === "upr123") unitCode = "UPR";
-      else if (pass === "rzb123") unitCode = "RZB";
-      else if (pass === "rzpr123") unitCode = "RZPR";
-      else if (pass === "pmm123") unitCode = "PMM";
-      else if (pass === "lebns123") unitCode = "LEBNS";
-      else if (pass === "vzv123") unitCode = "VZV";
-      else if (pass === "cvs123") unitCode = "CVS";
-      else if (pass === "rekr123") unitCode = "REKR";
-      else if (pass === "vmz123") unitCode = "VMZ";
-      else if (pass === "po123") unitCode = "PO";
-      else if (pass === "mp123") unitCode = "MP";
-      else {
-        alert("❌ Невірний пароль!");
-        return;
-      }
-
-      sessionStorage.setItem("bmz_unit", unitCode);
-      document.getElementById("loginBlock").style.display = "none";
-      document.getElementById("panel").style.display = "block";
-      loadData();
-
-      if (unitCode !== "ADMIN") {
-        if (unitCode === "OFCR") window.location.href = "officer.html";
-        else window.location.href = "index.html?unit=" + unitCode;
-      }
-    }
-
-    window.addEventListener("load", () => {
-      const unitCode = sessionStorage.getItem("bmz_unit");
-      if (unitCode === "ADMIN") {
-        document.getElementById("loginBlock").style.display = "none";
-        document.getElementById("panel").style.display = "block";
-        loadData();
-      } else if (unitCode === "OFCR") {
-        window.location.href = "officer.html";
-      } else if (unitCode) {
-        window.location.href = "index.html?unit=" + unitCode;
-      }
-    });
-
-    function logout() {
-      sessionStorage.removeItem("bmz_unit");
-      window.location.href = "admin.html";
-    }
-
-    function loadData() {
-      Papa.parse("bmz.csv", {
-        download: true,
-        header: true,
-        delimiter: ";",
-        complete: function(results) {
-          rowsData = results.data.filter(r => r["Підрозділ"]);
-          fillUnitFilter(rowsData);
-          renderTable(rowsData);
-        }
-      });
-    }
-
-    function fillUnitFilter(data) {
-      const unitFilter = document.getElementById("unitFilter");
-      const units = [...new Set(data.map(r => r["Підрозділ"]).filter(Boolean))].sort();
-      units.forEach(u => {
-        const opt = document.createElement("option");
-        opt.value = u;
-        opt.textContent = u;
-        unitFilter.appendChild(opt);
-      });
-      unitFilter.addEventListener("change", applyFilters);
-    }
-
-    function applyFilters() {
-      const selectedUnit = document.getElementById("unitFilter").value;
-      const filtered = selectedUnit === "all"
-        ? rowsData
-        : rowsData.filter(r => r["Підрозділ"] === selectedUnit);
-      renderTable(filtered);
-    }
-
-    function renderTable(arr) {
-  const tbody = document.querySelector("#bmzTable tbody");
-  tbody.innerHTML = "";
-  arr.forEach(r => {
-    const tr = document.createElement("tr");
-    const posada = (r["Посада"] || "").trim();
-    const pib = (r["ПІБ"] || "").trim();
-    const page = r["ПІБ_лат"] ? `soldiers/${r["ПІБ_лат"]}.html` : "#";
-
-    const isStructural = structuralPositions.some(p =>
-      posada.toLowerCase() === p.toLowerCase()
-    );
-    const styleStructural = isStructural ? "color:#7CFC00;font-weight:bold;" : "";
-
-    tr.innerHTML = `
-      <td contenteditable="true">${r["ПідрозділКод"] || ""} ${r["Підрозділ"] || ""}</td>
-      <td contenteditable="true" style="${styleStructural}">${posada}</td>
-      <td style="cursor:pointer;">${
-        pib
-          ? `<a href="${page}" target="_blank" style="color:#00c0c4;text-decoration:none;">${pib}</a>`
-          : isStructural
-            ? `<b style="color:#7CFC00;">${posada}</b>`
-            : "<i>Не призначено</i>"
-      }</td>
-      <td contenteditable="true">${r["ШПК"] || ""}</td>
-      <td contenteditable="true">${r["Військове звання"] || ""}</td>
-    `;
-    tbody.appendChild(tr);
-  });
+  document.querySelector('header').innerHTML =
+    `Адміністративна панель БМЗ — <span style='color:#9fffa1;font-size:0.8em;'>${role.toUpperCase()}</span>`;
+  document.getElementById("logout").style.display = "block";
+  document.getElementById("logout").onclick = () => location.reload();
+  await loadCSV(role);
 }
 
+// === Завантаження CSV ===
+async function loadCSV(role) {
+  const response = await fetch("bmz.csv");
+  const text = await response.text();
+  const rows = text.split("\n").slice(1).map(r => r.trim()).filter(r => r);
+  const table = document.querySelector("#dataTable tbody");
+  table.innerHTML = "";
+  let units = new Set();
 
-    function exportCSV() {
-      const csv = Papa.unparse(rowsData, { delimiter: ";" });
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "bmz_export.csv";
-      link.click();
+  rows.forEach(row => {
+    const [unit, code, posada, shpk, tr, vos, rank, pib, pibLat] = row.split(";").map(v => v.trim());
+    if (unit) units.add(unit);
+    if (role !== "admin" && code.toLowerCase() !== role.toLowerCase()) return;
+
+    const trEl = document.createElement("tr");
+
+    // === Якщо це роздільник підрозділу ===
+    if (unitNames.includes(posada) || (!pib && posada && unitNames.includes(posada.trim()))) {
+      trEl.classList.add("divider-row");
+      const td = document.createElement("td");
+      td.colSpan = 5;
+      td.textContent = posada.trim();
+      trEl.appendChild(td);
+      table.appendChild(trEl);
+      return;
     }
-  </script>
+
+    // === Звичайний рядок ===
+    const htmlPath = `foto/${pibLat}.html`;
+    const photoPath = `photos/${pibLat}.jpg`;
+    const pibCell = pibLat
+      ? `<span class="pib-link" data-photo="${photoPath}" data-html="${htmlPath}">${pib}</span>`
+      : (pib || "");
+
+    trEl.innerHTML = `
+      <td>${code ? code.toUpperCase() : ""}</td>
+      <td>${posada}</td>
+      <td>${pibCell}</td>
+      <td class="shpk-cell">${shpk}</td>
+      <td class="rank-cell">${rank}</td>
+    `;
+
+    // === Кольори за званням ===
+    const shpkCell = trEl.querySelector(".shpk-cell");
+    const rankCell = trEl.querySelector(".rank-cell");
+    const green = ["молодший сержант","сержант","старший сержант","головний сержант","майстер-сержант","штаб-сержант"];
+    const red = ["молодший лейтенант","лейтенант","старший лейтенант","капітан","майор","підполковник"];
+    if (green.includes(shpk.toLowerCase())) { shpkCell.classList.add("shpk-green"); rankCell.classList.add("rank-green"); }
+    if (red.includes(shpk.toLowerCase())) { shpkCell.classList.add("shpk-red"); rankCell.classList.add("rank-red"); }
+
+    trEl.querySelectorAll(".pib-link").forEach(span => {
+      span.addEventListener("click", e => {
+        const photo = e.target.dataset.photo;
+        const html = e.target.dataset.html;
+        showPhoto(photo, html);
+      });
+    });
+
+    table.appendChild(trEl);
+  });
+
+  // === Фільтр підрозділів ===
+  const filter = document.querySelector("#unitFilter");
+  filter.innerHTML = `<option value="all">Всі підрозділи</option>`;
+  units.forEach(u => filter.innerHTML += `<option value="${u}">${u}</option>`);
+  filter.onchange = () => {
+    const val = filter.value;
+    document.querySelectorAll("#dataTable tbody tr").forEach(tr => {
+      const cell = tr.querySelector("td:first-child");
+      if (!cell) return;
+      tr.style.display = (val === "all" || cell.textContent.trim() === val) ? "" : "none";
+    });
+  };
+}
+
+// === Модальне фото з затемненням ===
+function showPhoto(photoPath, htmlPath) {
+  const modal = document.createElement("div");
+  modal.className = "modal";
+  modal.innerHTML = `
+    <img src="${photoPath}" alt="Фото" />
+    <button>Переглянути інформацію</button>
+  `;
+  document.body.appendChild(modal);
+  setTimeout(() => modal.classList.add("active"), 20);
+
+  modal.querySelector("img").onclick = () => window.location.href = htmlPath;
+  modal.querySelector("button").onclick = () => window.location.href = htmlPath;
+
+  modal.onclick = e => {
+    if (e.target === modal) {
+      modal.classList.remove("active");
+      setTimeout(() => modal.remove(), 400);
+    }
+  };
+}
+
+checkAccess();
+</script>
 </body>
 </html>
