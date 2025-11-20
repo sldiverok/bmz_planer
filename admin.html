@@ -17,11 +17,9 @@
   td a,.pib-link{color:#00c0c4;text-decoration:none;font-weight:bold;cursor:pointer}
   td a:hover,.pib-link:hover{color:#80ffff}
   footer{text-align:center;font-size:0.9em;color:#888;padding-bottom:20px}
-  .divider-row td{background:#3a3000;color:#ffeb80;font-weight:bold;text-align:center;
-    border-top:2px solid #555;border-bottom:2px solid #555;padding:8px 0;}
+  .divider-row td{background:#3a3000;color:#ffeb80;font-weight:bold;text-align:center;border-top:2px solid #555;border-bottom:2px solid #555;padding:8px 0;}
   .vacant{opacity:.6;font-style:italic}
-  .modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;
-    z-index:9999;opacity:0;transition:opacity .4s ease,background .4s ease;background:rgba(0,0,0,0)}
+  .modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;z-index:9999;opacity:0;transition:opacity .4s ease,background .4s ease;background:rgba(0,0,0,0)}
   .modal.active{background:rgba(0,0,0,.9);opacity:1}
   .modal img{max-width:60%;border:3px solid #9fffa1;border-radius:10px;cursor:pointer;transition:transform .3s}
   .modal img:hover{transform:scale(1.02)}
@@ -32,9 +30,7 @@
 <body>
 <header id="header">Адміністративна панель БМЗ</header>
 <button id="logout">🚪 Вийти</button>
-
 <select id="unitFilter"><option value="all">Всі підрозділи</option></select>
-
 <table id="dataTable">
   <thead>
     <tr>
@@ -43,274 +39,135 @@
   </thead>
   <tbody></tbody>
 </table>
-
 <footer>© 2025 Батальйон матеріального забезпечення | Внутрішня система обліку</footer>
-
 <script>
-// ---- Ролі / паролі доступу ----
-const roles = {
-  admin: "admin123",
-  upr: "upr123",
-  rzb: "rzb123",
-  rzpr: "rzpr123",
-  pmm: "pmm123",
-  lebns: "lebns123",
-  vzv: "vzv123",
-  cvs: "cvs123",
-  rekr: "rekr123",
-  vmz: "vmz123",
-  po: "po123",
-  mp: "mp123"
-};
+const roles={admin:"admin123",upr:"upr123",rzb:"rzb123",rzpr:"rzpr123",pmm:"pmm123",lebns:"lebns123",vzv:"vzv123",cvs:"cvs123",rekr:"rekr123",vmz:"vmz123",po:"po123",mp:"mp123"};
+const roleUnits={admin:"all",upr:"Управління",rzb:"Рота забезпечення боєприпасами",rzpr:"Рота забезпечення продовольством, речовим та військово-технічним майном",pmm:"Автомобільний взвод підвозу пального та мастильних матеріалів",lebns:"Взвод логістично-евакуаційних безпілотних наземних систем",vzv:"Взвод забезпечення",cvs:"Відділення зв’язку",rekr:"Група забезпечення заходів рекрутингу",vmz:"Взвод матеріального забезпечення",po:"Пожежна обслуга",mp:"Медичний пункт"};
+const unitNames=Array.from(new Set(["Батальйон матеріального забезпечення","Управління","Рота забезпечення боєприпасами","Рота забезпечення продовольством, речовим та військово-технічним майном","Автомобільний взвод підвозу пального та мастильних матеріалів","Відділення зв’язку","Група забезпечення заходів цивільно-військового співробітництва","Група забезпечення заходів рекрутингу","Взвод матеріального забезпечення","Пожежна обслуга","Медичний пункт"]));
+const defaultColors={"Батальйон матеріального забезпечення":{bg:"#0f3b3b",color:"#9fffa1"},"Рота забезпечення боєприпасами":{bg:"#2b1a00",color:"#ffd980"},"Рота забезпечення продовольством, речовим та військово-технічним майном":{bg:"#2a1b1b",color:"#ffb7b7"},"Автомобільний взвод підвозу пального та мастильних матеріалів":{bg:"#1b2b1b",color:"#a8ffb0"},"Відділення зв’язку":{bg:"#1a1033",color:"#bfa0ff"},"Група забезпечення заходів цивільно-військового співробітництва":{bg:"#0f2a1a",color:"#99ffd8"},"Група забезпечення заходів рекрутингу":{bg:"#0f2a1a",color:"#99ffd8"},"Взвод матеріального забезпечення":{bg:"#0e1f2a",color:"#9fd8ff"},"Пожежна обслуга":{bg:"#2a0d0d",color:"#ffb0a0"},"Медичний пункт":{bg:"#10301c",color:"#a8ffd8"}};
 
-
-
-// ---- Зв’язок ролей з підрозділами ----
-const roleUnits = {
-  admin: "all",
-  upr: "Управління",
-  rzb: "Рота забезпечення боєприпасами",
-  rzpr: "Рота забезпечення продовольством, речовим та військово-технічним майном",
-  pmm: "Автомобільний взвод підвозу пального та мастильних матеріалів",
-  lebns: "Взвод логістично-евакуаційних безпілотних наземних систем",
-  vzv: "Взвод забезпечення",
-  cvs: "Відділення зв’язку",
-  rekr: "Група забезпечення заходів рекрутингу",
-  vmz: "Взвод матеріального забезпечення",
-  po: "Пожежна обслуга",
-  mp: "Медичний пункт"
-};
-
-// ---- Повний список підрозділів ----
-const unitNames = Array.from(new Set([
- "Батальйон матеріального забезпечення",
-  "Управління",
-  "Рота забезпечення боєприпасами",
-  "Автомобільний взвод підвозу боєприпасів",
-  "1 Автомобільне відділення",
-  "2 Автомобільне відділення",
-  "Такелажний взвод",
-  "Такелажне відділення",
-  "Польовий артилерійський склад",
-  "Група зберігання реактивних снарядів",
-  "Група зберігання боєприпасів до наземної артилерії",
-  "Група зберігання інженерних боєприпасів",
-  "Група зберігання стрілецької зброї",
-  "Група зберігання засобів безпілотних авіаційних комплексів",
-  "Рота забезпечення продовольством, речовим та військово-технічним майном",
-  "Взвод забезпечення",
-  "Автомобільне відділення підвозу продовольства, речового і військово-технічного майна",
-  "Склад військово-технічного майна",
-  "Продовольчий склад",
-  "Речовий склад",
-  "Господарчий взвод",
-  "Їдальня",
-  "Ремонтна майстерня речового майна",
-  "Польова лазня",
-  "Склади",
-  "Автомобільний взвод підвозу пального та мастильних матеріалів",
-  "1 Автомобільне відділення підвозу пального та мастильних матеріалів",
-  "2 Автомобільне відділення підвозу пального та мастильних матеріалів",
-  "Взвод логістично-евакуаційних безпілотних наземних систем",
-  "1 Відділення логістичних безпілотних наземних комплексів",
-  "2 Відділення логістичних безпілотних наземних комплексів",
-  "Віділення безпілотних авіаційних комплексів",
-  "Відділення зв’язку",
-  "Група забезпечення заходів цивільно-військового співробітництва",
-  "Група забезпечення заходів рекрутингу",
-  "Взвод матеріального забезпечення",
-  "Автомобільне відділення",
-  "Господарче відділення",
-  "Пожежна обслуга",
-  "Медичний пункт"
-]));
-
-
-// ---- Кольори підрозділів ----
-const defaultColors = {
-  "Батальйон матеріального забезпечення": { bg: "#0f3b3b", color: "#9fffa1" },
-  "Рота забезпечення боєприпасами": { bg: "#2b1a00", color: "#ffd980" },
-  "Рота забезпечення продовольством, речовим та військово-технічним майном": { bg: "#2a1b1b", color: "#ffb7b7" },
-  "Автомобільний взвод підвозу пального та мастильних матеріалів": { bg: "#1b2b1b", color: "#a8ffb0" },
-  "Взвод логістично-евакуаційних безпілотних наземних систем": { bg: "#102030", color: "#8cecff" },
-  "Відділення зв’язку": { bg: "#1a1033", color: "#bfa0ff" },
-  "Група забезпечення заходів рекрутингу": { bg: "#0f2a1a", color: "#99ffd8" },
-  "Взвод матеріального забезпечення": { bg: "#0e1f2a", color: "#9fd8ff" },
-  "Пожежна обслуга": { bg: "#2a0d0d", color: "#ffb0a0" },
-  "Медичний пункт": { bg: "#10301c", color: "#a8ffd8" }
-};
-
-// === Авторизація ===
-async function checkAccess() {
-  const pass = prompt("🔐 Введіть пароль для входу:");
-  let role = null;
-  for (const [k, v] of Object.entries(roles)) if (pass === v) role = k;
-  if (!role) {
-    document.body.innerHTML = "<h2 style='color:#ff6;text-align:center;margin-top:50px;'>❌ Доступ заборонено</h2>";
+async function checkAccess(){
+  const savedRole=localStorage.getItem("bmz_role");
+  if(savedRole){
+    await loadCSV(savedRole);
+    document.getElementById("logout").style.display="block";
+    document.getElementById("logout").onclick=()=>{localStorage.removeItem("bmz_role");location.reload()};
+    return;
+  }
+  const pass=prompt("🔐 Введіть пароль для входу:");
+  let role=null;
+  for(const[k,v]of Object.entries(roles))if(pass===v)role=k;
+  if(!role){
+    document.body.innerHTML="<h2 style='color:#ff6;text-align:center;margin-top:50px;'>❌ Доступ заборонено</h2>";
     throw new Error("Unauthorized");
   }
-
-  const unitName = roleUnits[role] || "all";
-  const header = document.getElementById("header");
-  header.innerHTML = `Адміністративна панель БМЗ — <span style='color:#9fffa1;font-size:.8em;'>${role.toUpperCase()}${unitName !== "all" ? " (" + unitName + ")" : ""}</span>`;
-
-  document.getElementById("logout").style.display = "block";
-  document.getElementById("logout").onclick = () => location.reload();
-
+  localStorage.setItem("bmz_role",role);
+  const unitName=roleUnits[role]||"all";
+  const header=document.getElementById("header");
+  header.innerHTML=`Адміністративна панель БМЗ — <span style='color:#9fffa1;font-size:.8em;'>${role.toUpperCase()}${unitName!=="all"?" ("+unitName+")":""}</span>`;
+  document.getElementById("logout").style.display="block";
+  document.getElementById("logout").onclick=()=>{localStorage.removeItem("bmz_role");location.reload()};
   await loadCSV(role);
 }
 
-// === Завантаження таблиці ===
-async function loadCSV(role) {
-  const res = await fetch("bmz.csv");
-  const txt = await res.text();
-  const rows = txt.split("\n").slice(1).map(r => r.trim()).filter(r => r);
-  const tbody = document.querySelector("#dataTable tbody");
-  tbody.innerHTML = "";
-  const unitsSet = new Set();
-  const shownDividers = new Set();
-  const unitFilterRole = roleUnits[role] || "all";
-
-  rows.forEach(row => {
-    const parts = row.split(";").map(v => v.trim());
-    const unit = parts[0] || "";
-    const code = parts[1] || "";
-    const posada = parts[2] || "";
-    const shpk = parts[3] || "";
-    const rank = parts[6] || "";
-    const pib = parts[7] || "";
-    const pibLat = parts[8] || "";
-
-    // ---- Фільтрація за роллю ----
-    if (unitFilterRole !== "all" && unit !== unitFilterRole) return;
-
-    // === Заголовок підрозділу ===
-   // === Заголовок підрозділу ===
-if (!pib) {
-  const dividerName = posada || unit;
-  const dividerLower = dividerName.toLowerCase();
-
-  // якщо це просто вакантна посада — не створюємо "підрозділ"
-  const isJobTitle =
-    dividerLower.includes("сержант") ||
-    dividerLower.includes("офіцер") ||
-    dividerLower.includes("начальник") ||
-    dividerLower.includes("командир") ||
-    dividerLower.includes("водій") ||
-    dividerLower.includes("комірник") ||
-    dividerLower.includes("зв’язку");
-
-  // справжній підрозділ — тільки якщо в списку unitNames і не є посада
-  if (unitNames.includes(dividerName) && !isJobTitle) {
-    if (!shownDividers.has(dividerName)) {
-      const trDiv = document.createElement("tr");
-      trDiv.className = "divider-row";
-      const td = document.createElement("td");
-      td.colSpan = 5;
-      td.textContent = dividerName;
-      if (defaultColors[dividerName]) {
-        td.style.backgroundColor = defaultColors[dividerName].bg;
-        td.style.color = defaultColors[dividerName].color;
+async function loadCSV(role){
+  const res=await fetch("bmz.csv");
+  const txt=await res.text();
+  const rows=txt.split("\n").slice(1).map(r=>r.trim()).filter(r=>r);
+  const tbody=document.querySelector("#dataTable tbody");
+  tbody.innerHTML="";
+  const unitsSet=new Set();
+  const shownDividers=new Set();
+  const unitFilterRole=roleUnits[role]||"all";
+  rows.forEach(row=>{
+    const parts=row.split(";").map(v=>v.trim());
+    const unit=parts[0]||"";
+    const code=parts[1]||"";
+    const posada=parts[2]||"";
+    const shpk=parts[3]||"";
+    const rank=parts[6]||"";
+    const pib=parts[7]||"";
+    const pibLat=parts[8]||"";
+    if(unitFilterRole!=="all"&&unit!==unitFilterRole)return;
+    if(!pib){
+      const dividerName=posada||unit;
+      const dividerLower=dividerName.toLowerCase();
+      const isJobTitle=dividerLower.includes("сержант")||dividerLower.includes("офіцер")||dividerLower.includes("начальник")||dividerLower.includes("командир")||dividerLower.includes("водій")||dividerLower.includes("комірник")||dividerLower.includes("зв’язку");
+      if(unitNames.includes(dividerName)&&!isJobTitle){
+        if(!shownDividers.has(dividerName)){
+          const trDiv=document.createElement("tr");
+          trDiv.className="divider-row";
+          const td=document.createElement("td");
+          td.colSpan=5;
+          td.textContent=dividerName;
+          if(defaultColors[dividerName]){
+            td.style.backgroundColor=defaultColors[dividerName].bg;
+            td.style.color=defaultColors[dividerName].color;
+          }
+          trDiv.appendChild(td);
+          tbody.appendChild(trDiv);
+          shownDividers.add(dividerName);
+          unitsSet.add(dividerName);
+        }
+        return;
       }
-      trDiv.appendChild(td);
-      tbody.appendChild(trDiv);
-      shownDividers.add(dividerName);
-      unitsSet.add(dividerName);
     }
-    return;
-  }
-}
-
-
-    // === Рядок особового складу ===
-    const tr = document.createElement("tr");
-    if (!pib) tr.classList.add("vacant");
-    const htmlPath = pibLat ? `foto/${pibLat}.html` : "";
-    const photoPath = pibLat ? `photos/${pibLat}.jpg` : "";
-    const pibCell = pibLat
-      ? `<span class="pib-link" data-photo="${photoPath}" data-html="${htmlPath}">${pib}</span>`
-      : `<span style='color:#777;font-style:italic'>Вакантно</span>`;
-    tr.innerHTML = `
-      <td>${code}</td>
-      <td>${posada}</td>
-      <td>${pibCell}</td>
-      <td>${shpk}</td>
-      <td>${rank}</td>
-    `;
+    const tr=document.createElement("tr");
+    if(!pib)tr.classList.add("vacant");
+    const htmlPath = pibLat ? `BIO/${pibLat}.html` : "";
+	const photoPath = pibLat ? `photos/${pibLat}.jpg` : "";
+    const pibCell=pibLat?`<span class="pib-link" data-photo="${photoPath}" data-html="${htmlPath}">${pib}</span>`:`<span style='color:#777;font-style:italic'>Вакантно</span>`;
+    tr.innerHTML=`<td>${code}</td><td>${posada}</td><td>${pibCell}</td><td>${shpk}</td><td>${rank}</td>`;
     tbody.appendChild(tr);
     unitsSet.add(unit);
-
-    // === Умовне форматування ===
-    const normalize = v => (v || "").toString().trim().toLowerCase();
-    const shpkText = normalize(shpk);
-    const rankText = normalize(rank);
-    const sergeantRanks = ["молодший сержант","сержант","старший сержант","штаб-сержант","майстер-сержант"];
-    const officerRanks = ["молодший лейтенант","лейтенант","старший лейтенант","капітан","майор","підполковник"];
-    const tdShpk = tr.children[3];
-    const tdRank = tr.children[4];
-
-    if (sergeantRanks.some(r => shpkText.includes(r) || rankText.includes(r))) {
-      tdShpk.style.color = "#7fff7f";
-      tdRank.style.color = "#7fff7f";
-      tdShpk.style.fontWeight = "bold";
-      tdRank.style.fontWeight = "bold";
-    }
-    if (officerRanks.some(r => shpkText.includes(r) || rankText.includes(r))) {
-      tdShpk.style.color = "#ff7070";
-      tdRank.style.color = "#ff7070";
-      tdShpk.style.fontWeight = "bold";
-      tdRank.style.fontWeight = "bold";
-    }
+    const normalize=v=>(v||"").toString().trim().toLowerCase();
+    const shpkText=normalize(shpk);
+    const rankText=normalize(rank);
+    const sergeantRanks=["молодший сержант","сержант","старший сержант","штаб-сержант","майстер-сержант"];
+    const officerRanks=["молодший лейтенант","лейтенант","старший лейтенант","капітан","майор","підполковник"];
+    const tdShpk=tr.children[3];
+    const tdRank=tr.children[4];
+    if(sergeantRanks.some(r=>shpkText.includes(r)||rankText.includes(r))){tdShpk.style.color="#7fff7f";tdRank.style.color="#7fff7f";tdShpk.style.fontWeight="bold";tdRank.style.fontWeight="bold";}
+    if(officerRanks.some(r=>shpkText.includes(r)||rankText.includes(r))){tdShpk.style.color="#ff7070";tdRank.style.color="#ff7070";tdShpk.style.fontWeight="bold";tdRank.style.fontWeight="bold";}
   });
-
-  // === Фільтр ===
-  const filter = document.getElementById("unitFilter");
-  filter.innerHTML = `<option value="all">Всі підрозділи</option>`;
-  Array.from(unitsSet).sort().forEach(u => {
-    const opt = document.createElement("option");
-    opt.value = u;
-    opt.textContent = u;
-    filter.appendChild(opt);
-  });
-
-  filter.onchange = () => {
-    const val = filter.value;
-    document.querySelectorAll("#dataTable tbody tr").forEach(tr => {
-      if (tr.classList.contains("divider-row")) {
-        tr.style.display = (val === "all" || tr.textContent.trim() === val) ? "" : "none";
-      } else {
-        let prev = tr.previousElementSibling;
-        while (prev && !prev.classList.contains("divider-row")) prev = prev.previousElementSibling;
-        const parentUnit = prev ? prev.textContent.trim() : "";
-        tr.style.display = (val === "all" || parentUnit === val) ? "" : "none";
+  const filter=document.getElementById("unitFilter");
+  filter.innerHTML=`<option value="all">Всі підрозділи</option>`;
+  Array.from(unitsSet).sort().forEach(u=>{const opt=document.createElement("option");opt.value=u;opt.textContent=u;filter.appendChild(opt);});
+  filter.onchange=()=>{
+    const val=filter.value;
+    document.querySelectorAll("#dataTable tbody tr").forEach(tr=>{
+      if(tr.classList.contains("divider-row")){
+        tr.style.display=(val==="all"||tr.textContent.trim()===val)?"":"none";
+      }else{
+        let prev=tr.previousElementSibling;
+        while(prev&&!prev.classList.contains("divider-row"))prev=prev.previousElementSibling;
+        const parentUnit=prev?prev.textContent.trim():"";
+        tr.style.display=(val==="all"||parentUnit===val)?"":"none";
       }
     });
   };
-
-  // === Клік по ПІБ ===
-  document.querySelectorAll(".pib-link").forEach(el => {
-    el.addEventListener("click", () => {
-      const photo = el.dataset.photo;
-      const html = el.dataset.html;
-      if (photo) {
-        const modal = document.createElement("div");
-        modal.className = "modal active";
-        modal.innerHTML = `<img src="${photo}" alt="Фото"><button>Закрити</button>`;
+  document.querySelectorAll(".pib-link").forEach(el=>{
+    el.addEventListener("click",()=>{
+      const photo=el.dataset.photo;
+      const html=el.dataset.html;
+      if(photo){
+        const modal=document.createElement("div");
+        modal.className="modal active";
+        modal.innerHTML=`<img src="${photo}" alt="Фото"><button>Закрити</button>`;
         document.body.appendChild(modal);
-        modal.querySelector("button").onclick = () => modal.remove();
-        modal.onclick = e => { if (e.target === modal) modal.remove(); };
-        const img = modal.querySelector("img");
-        if (html) {
-          img.style.cursor = "pointer";
-          img.onclick = e => { e.stopPropagation(); window.open(html, "_blank"); };
+        modal.querySelector("button").onclick=()=>modal.remove();
+        modal.onclick=e=>{if(e.target===modal)modal.remove();};
+        const img=modal.querySelector("img");
+        if(html){
+          img.style.cursor="pointer";
+          img.onclick=e=>{e.stopPropagation();window.open(html,"_blank");};
         }
-      } else if (html) {
-        window.open(html, "_blank");
+      }else if(html){
+        window.open(html,"_blank");
       }
     });
   });
 }
-
 checkAccess();
 </script>
 </body>

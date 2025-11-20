@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Картка військовослужбовця – БУНДЗ Михайло Борисович</title>
+<style>
+  body {
+    font-family: "Segoe UI", sans-serif;
+    background-color: #101010;
+    color: #f2f2f2;
+    margin: 0;
+    padding: 0;
+  }
+
+  .container {
+    width: 95%;
+    max-width: 900px;
+    margin: 20px auto;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+  }
+
+  /* Заголовки блоків */
+  h2 {
+    text-align: center;
+    margin-top: 0;
+    padding: 12px 0;
+    letter-spacing: 1px;
+    color: #9fffa1;
+  }
+
+  /* Три відтінки */
+  .block-bio { background-color: #1b1b1b; }
+  .block-military { background-color: #242424; }
+  .block-family { background-color: #2f2f2f; }
+
+  .section {
+    padding: 15px 20px 25px 20px;
+  }
+
+  .field {
+    margin-bottom: 10px;
+  }
+
+  label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 4px;
+    color: #baffb9;
+  }
+
+  textarea, input[type="text"] {
+    width: 100%;
+    background-color: #3b3b3b;
+    color: #f2f2f2;
+    border: 1px solid #555;
+    border-radius: 6px;
+    resize: vertical;
+    min-height: 28px;
+    padding: 6px 8px;
+    font-size: 0.95em;
+  }
+
+  textarea:focus, input:focus {
+    outline: none;
+    border-color: #9fffa1;
+  }
+
+  textarea {
+    min-height: 28px;
+    max-height: 72px; /* ≈3 рядки */
+  }
+
+  footer {
+    text-align: center;
+    font-size: 0.85em;
+    color: #777;
+    margin: 10px 0 20px;
+  }
+
+  @media (max-width: 600px) {
+    textarea, input[type="text"] { font-size: 0.9em; }
+    h2 { font-size: 1.1em; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- ===== БЛОК 1: БІО ===== -->
+  <div class="section block-bio">
+    <h2>Біографічні дані</h2>
+    <div class="field"><label>1) Телефон: </label><input type="text" value="0669354587;0689662913"></div>
+    <div class="field"><label>2) Група крові:</label><input type="text" value="ІІ+"></div>
+    <div class="field"><label>3) Паспорт № (15 символів) / Ким виданий:</label><input type="text" value="Франківським  РВ ЛМУ УМВС України в Львівській обл., 18.01.2003 р."</div>
+    <div class="field"><label>4) РНОКПП:</label><input type="text" value="2661912857"></div>
+    <div class="field"><label>5) Дата і місце народження:<input type="text" value="17.11.1972 р.н. с. Лелехівка Яворівського р-ну Львівської обл."</div>
+    <div class="field"><label>6) Адреса проживання:</label><input type="text" value="м. Львів, вул. Куликівська,57, кв.1"</div>
+    <div class="field"><label>7) Адреса реєстрації:</label><input type="text" value="м. Львів, Героїв Майдану,32"</div>
+    <div class="field"><label>8) Освітній рівень:</label><input type="text" value="середня"></div>
+    <div class="field"><label>9) Судимість:</label><input type="text" value="Відсутня"></div>
+  </div>
+
+  <!-- ===== БЛОК 2: ВІЙСЬКОВА СЛУЖБА ===== -->
+  <div class="section block-military">
+    <h2>Військова служба</h2>
+    <div class="field"><label>1) Дата призову, яким ТЦК призваний:</label><textarea>Галицько-Франківським ОРТЦК та СП м. Львова,27.07.2024 р.</textarea></div>
+    <div class="field"><label>2) Тип служби (Контракт / Мобілізація):<input type="text" value="мобілізація"></div>
+    <div class="field"><label>3) № військового квитка:</label><input type="text" value=""></div>
+    <div class="field"><label>4) № УБД:</label><input type="text" value="Серія А № 154992 від 09.05.2025 р."></div>
+    <div class="field"><label>5) Дата БЗВП, яка частина:</label><input type="text" value=""</div>
+    <div class="field"><label>6) Дата ФАХ, яка частина:</label><input type="text" value=""</div>
+    <div class="field"><label>7) Відпустки:</label><textarea>1/2025 2/2025</textarea></div>
+    <div class="field"><label>8) Матеріальна допомога:</label><textarea>2025 отримана</textarea></div>
+    <div class="field"><label>9) Заохочення:</label><textarea>Відсутні</textarea></div>
+    <div class="field"><label>10) Стягнення:</label><textarea>Відсутні</textarea></div>
+  </div>
+
+  <!-- ===== БЛОК 3: СІМ’Я ===== -->
+  <div class="section block-family">
+    <h2>Сім’я</h2>
+    <div class="field"><label>1) Сімейний стан: <input type="text" value="Одружений"></div>
+    <div class="field"><label>2) Батько: <input type="text" value=""</div>
+    <div class="field"><label>3) Мати: <input type="text" value="БУНДЗ Марія Степанівна, с. Лелехівка Яворівського р-ну Львівської обл., пенсіонер, 0970355205,01.01.1949 р.н."</div>
+    <div class="field"><label>4) Дружина (чоловік): <input type="text" value="БУНДЗ Наталія Михайлівна, м. Львів, вул. Куликівська,57, кв.1, ПП «Соловій-Транс», водій міжнародних перевезень, 0674355153, 1975 р.н."</div>
+    <div class="field"><label>5) Брати (сестри): <input type="text" value="БУНДЗ Ігор Борисович, Тернопільська обл., м. Збаразький р-н, с. Максимівка, не працює, 
+096460622,1968 р.н.; БУНДЗ Петро Борисович, с. Лелехівка Яворівського р-ну Львівської обл., 1970 р.н."</div>
+    <div class="field"><label>6) Діти: <input type="text" value="БУНДЗ Христина Михайлівна, м. Львів, вул. Куликівська,57, кв.1, ІТ сфера, 0995237207, 1996 р.н."</div>
+  </div>
+
+</div>
+
+<button onclick="goBack()" style="
+  position:fixed;bottom:25px;left:25px;
+  background:#00c0c4;color:#fff;
+  border:none;border-radius:8px;
+  padding:8px 16px;font-size:15px;
+  cursor:pointer;">⬅ Назад</button>
+
+<script>
+function goBack() {
+  window.location.href = '../admin.html';
+}
+</script>
+
+<!-- ===== Кнопка "Назад" ===== -->
+<button onclick="goBack()" style="
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background: #00c0c4;
+  color: #111;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 15px;
+  box-shadow: 0 0 8px rgba(0,0,0,0.4);
+  transition: all 0.2s ease;
+  z-index: 1000;
+">
+⬅ Назад
+</button>
+
+<script>
+function goBack() {
+  // повертаємо користувача в головну адмінку
+  window.location.href = "../admin.html";
+
+  // якщо є прокрутка — плавно до верху
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+</script>
+
+
+
+<footer>© 2025 | Картка військовослужбовця | Приймальня начальника штабу</footer>
+
+</body>
+</html>
